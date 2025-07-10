@@ -49,25 +49,34 @@ class _HomepageState extends State<Homepage> {
   }
 
   Future<void> _pickFiles() async {
-    final status = await Permission.audio.request();
-    if (!status.isGranted) return;
+  final result = await FilePicker.platform.pickFiles(
+    type: FileType.custom,
+    allowedExtensions: ['mp3'],
+    allowMultiple: true,
+  );
 
-    final dirPath = await FilePicker.platform.getDirectoryPath();
-    if (dirPath == null) return;
+  if (result == null || result.files.isEmpty) return;
 
-    final files = await _listMp3FilesRecursively(Directory(dirPath));
-    if (files.isNotEmpty) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('saved_folder_path', dirPath);  // Save folder path persistently
+ final files = result.files
+    .where((file) => file.path != null && file.path!.endsWith('.mp3'))
+    .map((file) => file.path!)
+    .toList(); // List<String>
 
-      setState(() {
-        _mp3Files = files;
-        _savedFolderPath = dirPath;
-        _currentIndex = null;
-        _playerState = PlayerState.stopped;
-      });
-    }
+
+  if (files.isNotEmpty) {
+    final prefs = await SharedPreferences.getInstance();
+    // Saving paths is risky on iOS, just store them temporarily in memory
+
+    setState(() {
+     _mp3Files = files; // List<String>
+
+      _savedFolderPath = null; // not used anymore
+      _currentIndex = null;
+      _playerState = PlayerState.stopped;
+    });
   }
+}
+
 
   Future<List<String>> _listMp3FilesRecursively(Directory dir) async {
     final files = <String>[];
