@@ -71,45 +71,49 @@ class OnBoardingPageState extends State<OnBoardingPage> {
           decoration: pageDecoration,
         ),
         PageViewModel(
-          image: Column(
-            children: [
-              SizedBox(height: 170.h),
-              Text(
-                "Who are you ?",
-                style: TextStyle(fontSize: 28.0.sp, fontWeight: FontWeight.w700, color: Colors.white),
-              ),
-              SizedBox(height: 40.h),
-              Text(
-                "Please enter your name below",
-                style: TextStyle(fontSize: 16.0.sp, fontWeight: FontWeight.normal, color: Colors.white),
-              ),
-            ],
+          image: SingleChildScrollView(
+            child: Column(
+              children: [
+                SizedBox(height: 170.h),
+                Text(
+                  "Who are you ?",
+                  style: TextStyle(fontSize: 28.0.sp, fontWeight: FontWeight.w700, color: Colors.white),
+                ),
+                SizedBox(height: 40.h),
+                Text(
+                  "Please enter your name below",
+                  style: TextStyle(fontSize: 16.0.sp, fontWeight: FontWeight.normal, color: Colors.white),
+                ),
+              ],
+            ),
           ),
           title: "lallalalalal",
-          bodyWidget: Column(
-            children: [
-              Container(
-                width: 343.w,
-                height: 62.h,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(25),
-                ),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Your name',
-                    hintStyle: TextStyle(color: Colors.white70),
-                    filled: true,
-                    fillColor: Colors.grey[900],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide.none,
-                    ),
+          bodyWidget: SingleChildScrollView(
+            child: Column(
+              children: [
+                Container(
+                  width: 343.w,
+                  height: 62.h,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(25),
                   ),
-                  style: TextStyle(color: Colors.white),
-                  controller: controller,
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Your name',
+                      hintStyle: TextStyle(color: Colors.white70),
+                      filled: true,
+                      fillColor: Colors.grey[900],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    style: TextStyle(color: Colors.white),
+                    controller: controller,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           decoration: pageDecoration.copyWith(
             titleTextStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal, color: Colors.transparent),

@@ -126,120 +126,122 @@ bool _isLooping = false;
         ),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Container(
-              height: 380.h,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/Song Cover Art 1.png'),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Container(
+                height: 380.h,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/Song Cover Art 1.png'),
+                  ),
                 ),
               ),
-            ),
-           
-            Text(
-              audioTitle,
-              style: const TextStyle(
-                fontSize: 24,
-                color: Colors.white,
-                fontFamily: 'Nunito',
-                fontWeight: FontWeight.bold,
+             
+              Text(
+                audioTitle,
+                style:  TextStyle(
+                  fontSize: 24.sp,
+                  color: Colors.white,
+                  fontFamily: 'Nunito',
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 20.h),
-            Slider(
-              thumbColor: Color(0xff52D7BF),
-              inactiveColor: Colors.grey,
-    
-              label:
-                  '${_currentPosition.inMinutes}:${_currentPosition.inSeconds.remainder(60).toString().padLeft(2, '0')} / ${_totalDuration.inMinutes}:${_totalDuration.inSeconds.remainder(60).toString().padLeft(2, '0')}',
-              activeColor: Color(0xff52D7BF),
-              min: 0,
-              max: _totalDuration.inMilliseconds.toDouble(),
-              value: _currentPosition.inMilliseconds
-                  .clamp(0, _totalDuration.inMilliseconds)
-                  .toDouble(),
-              onChanged: (value) {
-                _seekTo(Duration(milliseconds: value.toInt()));
-              },
-            ),
-            Container(
-              width: 350.w,
-              height: 100.h,
-              decoration: BoxDecoration(
-                color: Color.fromARGB(255, 23, 23, 23),
-                borderRadius: BorderRadius.circular(30.r),
+              SizedBox(height: 20.h),
+              Slider(
+                thumbColor: Color(0xff52D7BF),
+                inactiveColor: Colors.grey,
+            
+                label:
+                    '${_currentPosition.inMinutes}:${_currentPosition.inSeconds.remainder(60).toString().padLeft(2, '0')} / ${_totalDuration.inMinutes}:${_totalDuration.inSeconds.remainder(60).toString().padLeft(2, '0')}',
+                activeColor: Color(0xff52D7BF),
+                min: 0,
+                max: _totalDuration.inMilliseconds.toDouble(),
+                value: _currentPosition.inMilliseconds
+                    .clamp(0, _totalDuration.inMilliseconds)
+                    .toDouble(),
+                onChanged: (value) {
+                  _seekTo(Duration(milliseconds: value.toInt()));
+                },
               ),
-              child: Column(
+              Container(
+                width: 350.w,
+                height: 100.h,
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 23, 23, 23),
+                  borderRadius: BorderRadius.circular(30.r),
+                ),
+                child: Column(
+                  children: [
+                    SizedBox(height: 10.h,),
+                    Text(
+                      'Up next',
+                      style: GoogleFonts.bakbakOne(
+                        color: Colors.white,
+                        fontSize: 20.sp,
+                      ),
+                    ),
+                    SizedBox(height: 10.h),
+                    Text(
+                      '${_mp3Files[audioIndex < _mp3Files.length - 1 ? audioIndex + 1 : 0].split('/').last}',
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 10.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  SizedBox(height: 10.h,),
-                  Text(
-                    'Up next',
-                    style: GoogleFonts.bakbakOne(
+                
+                  IconButton(
+                    onPressed: _playPrevious,
+                    icon:  Icon(
+                      Icons.skip_previous_rounded,
+                      size: 30.r,
                       color: Colors.white,
-                      fontSize: 20,
                     ),
                   ),
-                  SizedBox(height: 10.h),
-                  Text(
-                    '${_mp3Files[audioIndex < _mp3Files.length - 1 ? audioIndex + 1 : 0].split('/').last}',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                    textAlign: TextAlign.center,
+                  IconButton(
+                    onPressed: _playPause,
+                    icon: Icon(
+                      _isPlaying
+                          ? Icons.pause_circle_filled
+                          : Icons.play_circle_fill,
+                      size: 70.r,
+                      color: Colors.white,
+                    ),
                   ),
+                  IconButton(
+                    onPressed: _playNext,
+                    icon:  Icon(
+                      Icons.skip_next_rounded,
+                      color: Colors.white,
+                      size: 30.r,
+                    ),
+                  ),
+                IconButton(
+          onPressed: () {
+            setState(() => _isLooping = !_isLooping);
+            _audioPlayer.setReleaseMode(_isLooping ? ReleaseMode.loop : ReleaseMode.release);
+          },
+          icon: Icon(
+            Icons.loop,
+            color: _isLooping ? const Color(0xff52D7BF) : Colors.white,
+            size: 30.r,
+          ),
+        ),
+        
+        
                 ],
               ),
-            ),
-            SizedBox(height: 10.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-              
-                IconButton(
-                  onPressed: _playPrevious,
-                  icon: const Icon(
-                    Icons.skip_previous_rounded,
-                    size: 30,
-                    color: Colors.white,
-                  ),
-                ),
-                IconButton(
-                  onPressed: _playPause,
-                  icon: Icon(
-                    _isPlaying
-                        ? Icons.pause_circle_filled
-                        : Icons.play_circle_fill,
-                    size: 70,
-                    color: Colors.white,
-                  ),
-                ),
-                IconButton(
-                  onPressed: _playNext,
-                  icon: const Icon(
-                    Icons.skip_next_rounded,
-                    color: Colors.white,
-                    size: 30,
-                  ),
-                ),
-              IconButton(
-  onPressed: () {
-    setState(() => _isLooping = !_isLooping);
-    _audioPlayer.setReleaseMode(_isLooping ? ReleaseMode.loop : ReleaseMode.release);
-  },
-  icon: Icon(
-    Icons.loop,
-    color: _isLooping ? const Color(0xff52D7BF) : Colors.white,
-    size: 30,
-  ),
-),
-
-
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

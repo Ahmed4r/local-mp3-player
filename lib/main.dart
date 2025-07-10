@@ -25,7 +25,8 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         home: OnBoardingPage(),
-      initialRoute: seenOnboarding ? Homepage.routeName : OnBoardingPage.routeName,
+      // initialRoute: seenOnboarding ? Homepage.routeName : OnBoardingPage.routeName,
+      initialRoute: OnBoardingPage.routeName,
         routes: {
           OnBoardingPage.routeName: (context) => const OnBoardingPage(),
           Homepage.routeName: (context) => const Homepage(),
