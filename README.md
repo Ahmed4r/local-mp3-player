@@ -21,3 +21,9 @@ A Flutter onboarding experience using `introduction_screen` package. This projec
    ```bash
    git clone https://github.com/your-username/onboarding.git
    cd onboarding
+2. Get dependencies:
+   ```bash
+   flutter pub get
+3. Run the app:
+   ```bash
+   flutter run
