@@ -125,10 +125,12 @@ class _HomepageState extends State<Homepage> {
                     itemBuilder: (context, index) {
                       final isSelected = _currentIndex == index;
                       return ListTile(
-                        leading: Image.asset('assets/apple-music-note.jpg'),
+                        splashColor: Colors.amber,
+                       contentPadding: EdgeInsets.all(10.r),
+                        leading: Image.asset('assets/apple-music-note.jpg',filterQuality: FilterQuality.high,scale: 4.sp,),
                         title: Text(
                           p.basename(_mp3Files[index]),
-                          style:  TextStyle(color: Colors.white,fontSize: 24.sp),  // Text white
+                          style:  TextStyle(color: Colors.white,fontSize: 18.sp),  // Text white
                         ),
                         onTap: () {
                           Navigator.pushNamed(

@@ -34,7 +34,13 @@ bool _isLooping = false;
   @override
   void initState() {
     super.initState();
+
     _audioPlayer = AudioPlayer();
+    _audioPlayer.onDurationChanged.listen((duration) {
+    if (mounted) {
+      setState(() => _totalDuration = duration);
+    }
+  });
 
     _playerStateSubscription = _audioPlayer.onPlayerStateChanged.listen((state) {
       if (!mounted) return;  // Check mounted before setState
@@ -111,6 +117,13 @@ bool _isLooping = false;
     _audioPlayer.resume();
     if (mounted) setState(() {});
   }
+  String formatDuration(Duration duration) {
+  String twoDigits(int n) => n.toString().padLeft(2, '0');
+  final minutes = twoDigits(duration.inMinutes);
+  final seconds = twoDigits(duration.inSeconds.remainder(60));
+  return '$minutes:$seconds';
+}
+
 
 
   @override
@@ -136,6 +149,8 @@ bool _isLooping = false;
                 width: double.infinity,
                 decoration: BoxDecoration(
                   image: DecorationImage(
+                    filterQuality: FilterQuality.high,
+                    fit: BoxFit.cover,
                     image: AssetImage('assets/Song Cover Art 1.png'),
                   ),
                 ),
@@ -143,31 +158,58 @@ bool _isLooping = false;
              
               Text(
                 audioTitle,
+                maxLines: 1,
                 style:  TextStyle(
                   fontSize: 24.sp,
                   color: Colors.white,
                   fontFamily: 'Nunito',
                   fontWeight: FontWeight.bold,
+                  
                 ),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 20.h),
-              Slider(
-                thumbColor: Color(0xff52D7BF),
-                inactiveColor: Colors.grey,
+              Column(
+  children: [
+    // Duration Text
+    Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(formatDuration(_currentPosition), style: TextStyle(color: Colors.white)),
+        Text(formatDuration(_totalDuration), style: TextStyle(color: Colors.white)),
+      ],
+    ),
+
+    // Slider
+    Slider(
+      min: 0,
+      max: _totalDuration.inMilliseconds.toDouble(),
+      value: _currentPosition.inMilliseconds.clamp(0, _totalDuration.inMilliseconds).toDouble(),
+      onChanged: (value) {
+        _audioPlayer.seek(Duration(milliseconds: value.toInt()));
+      },
+      activeColor: Color(0xff52D7BF),
+      inactiveColor: Colors.grey,
+    ),
+  ],
+),
+
+              // Slider(
+              //   thumbColor: Color(0xff52D7BF),
+              //   inactiveColor: Colors.grey,
             
-                label:
-                    '${_currentPosition.inMinutes}:${_currentPosition.inSeconds.remainder(60).toString().padLeft(2, '0')} / ${_totalDuration.inMinutes}:${_totalDuration.inSeconds.remainder(60).toString().padLeft(2, '0')}',
-                activeColor: Color(0xff52D7BF),
-                min: 0,
-                max: _totalDuration.inMilliseconds.toDouble(),
-                value: _currentPosition.inMilliseconds
-                    .clamp(0, _totalDuration.inMilliseconds)
-                    .toDouble(),
-                onChanged: (value) {
-                  _seekTo(Duration(milliseconds: value.toInt()));
-                },
-              ),
+              //   label:
+              //       '${_currentPosition.inMinutes}:${_currentPosition.inSeconds.remainder(60).toString().padLeft(2, '0')} / ${_totalDuration.inMinutes}:${_totalDuration.inSeconds.remainder(60).toString().padLeft(2, '0')}',
+              //   activeColor: Color(0xff52D7BF),
+              //   min: 0,
+              //   max: _totalDuration.inMilliseconds.toDouble(),
+              //   value: _currentPosition.inMilliseconds
+              //       .clamp(0, _totalDuration.inMilliseconds)
+              //       .toDouble(),
+              //   onChanged: (value) {
+              //     _seekTo(Duration(milliseconds: value.toInt()));
+              //   },
+              // ),
               Container(
                 width: 350.w,
                 height: 100.h,

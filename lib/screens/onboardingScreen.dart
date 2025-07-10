@@ -43,7 +43,7 @@ class OnBoardingPageState extends State<OnBoardingPage> {
   }
 
   Widget _buildImage(String assetName, [double width = 350]) {
-    return Image.asset('assets/$assetName', width: width, cacheWidth: 300);
+    return Image.asset('assets/$assetName', width: width, cacheWidth: 300,filterQuality: FilterQuality.high,fit: BoxFit.cover,);
   }
 
   @override
