@@ -87,8 +87,8 @@ class _HomepageState extends State<Homepage> {
     return Scaffold(
       backgroundColor: Colors.black,  // Set scaffold background to black
       appBar: AppBar(
+        leading: Icon(Icons.dark_mode,color: Colors.white,),
         backgroundColor: Colors.black,  // AppBar background black
-        leading: BackButton(color: Colors.white),  // Back button white
         title: const Text(
           'Audio Player',
           style: TextStyle(color: Colors.white),  // Title text white
@@ -103,7 +103,6 @@ class _HomepageState extends State<Homepage> {
       ),
       body: Column(
         children: [
-         
           Expanded(
             child: _mp3Files.isEmpty
                 ? const Center(

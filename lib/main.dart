@@ -4,15 +4,19 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:onboarding/screens/audioplayer_screen.dart';
 import 'package:onboarding/screens/homepage.dart';
 import 'package:onboarding/screens/onboardingScreen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   GoogleFonts.config.allowRuntimeFetching = true;
-  runApp(const MyApp());
+   final prefs = await SharedPreferences.getInstance();
+  final seenOnboarding = prefs.getBool('onboarding_done') ?? false;
+   runApp(MyApp(seenOnboarding: seenOnboarding));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool seenOnboarding;
+   MyApp({super.key,required this.seenOnboarding});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +25,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         home: OnBoardingPage(),
-        initialRoute: OnBoardingPage.routeName,
+      initialRoute: seenOnboarding ? Homepage.routeName : OnBoardingPage.routeName,
         routes: {
           OnBoardingPage.routeName: (context) => const OnBoardingPage(),
           Homepage.routeName: (context) => const Homepage(),

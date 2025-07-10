@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:onboarding/screens/homepage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OnBoardingPage extends StatefulWidget {
   static const String routeName = '/OnBoardingPage';
@@ -18,6 +19,12 @@ class OnBoardingPageState extends State<OnBoardingPage> {
   late final PageController _pageController;
   TextEditingController? controller = TextEditingController();
 
+  Future<void> _completeOnboarding(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('onboarding_done', true);
+    Navigator.of(context).pushReplacementNamed(Homepage.routeName);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -31,6 +38,7 @@ class OnBoardingPageState extends State<OnBoardingPage> {
   }
 
   void _onIntroEnd(context) {
+    _completeOnboarding(context);
     Navigator.of(context).pushNamed(Homepage.routeName);
   }
 
@@ -119,8 +127,7 @@ class OnBoardingPageState extends State<OnBoardingPage> {
           footer: Center(
             child: InkWell(
               onTap: () {
-                log('button clicked');
-                Navigator.pushNamed(context, Homepage.routeName);
+                _completeOnboarding(context);
               },
               child: Container(
                 height: 54.h,
