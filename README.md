@@ -19,7 +19,7 @@ A Flutter onboarding experience using `introduction_screen` package. This projec
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/your-username/onboarding.git
+   git clone https://github.com/Ahmed4r/onboarding.git
    cd onboarding
 2. Get dependencies:
    ```bash
