@@ -1,9 +1,9 @@
 import 'dart:async';
-
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 
 class AudioplayerScreen extends StatefulWidget {
   static const String routeName = 'player';
@@ -12,8 +12,6 @@ class AudioplayerScreen extends StatefulWidget {
   @override
   _AudioplayerScreenState createState() => _AudioplayerScreenState();
 }
-
-
 
 class _AudioplayerScreenState extends State<AudioplayerScreen> {
   late AudioPlayer _audioPlayer;
@@ -26,10 +24,10 @@ class _AudioplayerScreenState extends State<AudioplayerScreen> {
   Duration _totalDuration = Duration.zero;
   bool _isPlaying = false;
 
-    late StreamSubscription<PlayerState> _playerStateSubscription;
+  late StreamSubscription<PlayerState> _playerStateSubscription;
   late StreamSubscription<Duration> _durationSubscription;
   late StreamSubscription<Duration> _positionSubscription;
-bool _isLooping = false;
+  bool _isLooping = false;
 
   @override
   void initState() {
@@ -37,13 +35,15 @@ bool _isLooping = false;
 
     _audioPlayer = AudioPlayer();
     _audioPlayer.onDurationChanged.listen((duration) {
-    if (mounted) {
-      setState(() => _totalDuration = duration);
-    }
-  });
+      if (mounted) {
+        setState(() => _totalDuration = duration);
+      }
+    });
 
-    _playerStateSubscription = _audioPlayer.onPlayerStateChanged.listen((state) {
-      if (!mounted) return;  // Check mounted before setState
+    _playerStateSubscription = _audioPlayer.onPlayerStateChanged.listen((
+      state,
+    ) {
+      if (!mounted) return; // Check mounted before setState
       setState(() {
         _isPlaying = state == PlayerState.playing;
       });
@@ -67,7 +67,8 @@ bool _isLooping = false;
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final args =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     audioPath = args['audioPath'];
     audioTitle = args['audioTitle'];
     _mp3Files = List<String>.from(args['audioList'] ?? []);
@@ -117,14 +118,13 @@ bool _isLooping = false;
     _audioPlayer.resume();
     if (mounted) setState(() {});
   }
+
   String formatDuration(Duration duration) {
-  String twoDigits(int n) => n.toString().padLeft(2, '0');
-  final minutes = twoDigits(duration.inMinutes);
-  final seconds = twoDigits(duration.inSeconds.remainder(60));
-  return '$minutes:$seconds';
-}
-
-
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes);
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -155,61 +155,51 @@ bool _isLooping = false;
                   ),
                 ),
               ),
-             
+
               Text(
                 audioTitle,
                 maxLines: 1,
-                style:  TextStyle(
+                style: TextStyle(
                   fontSize: 24.sp,
                   color: Colors.white,
                   fontFamily: 'Nunito',
                   fontWeight: FontWeight.bold,
-                  
                 ),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 20.h),
               Column(
-  children: [
-    // Duration Text
-    Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(formatDuration(_currentPosition), style: TextStyle(color: Colors.white)),
-        Text(formatDuration(_totalDuration), style: TextStyle(color: Colors.white)),
-      ],
-    ),
+                children: [
+                  // Duration Text
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        formatDuration(_currentPosition),
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      Text(
+                        formatDuration(_totalDuration),
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
 
-    // Slider
-    Slider(
-      min: 0,
-      max: _totalDuration.inMilliseconds.toDouble(),
-      value: _currentPosition.inMilliseconds.clamp(0, _totalDuration.inMilliseconds).toDouble(),
-      onChanged: (value) {
-        _audioPlayer.seek(Duration(milliseconds: value.toInt()));
-      },
-      activeColor: Color(0xff52D7BF),
-      inactiveColor: Colors.grey,
-    ),
-  ],
-),
-
-              // Slider(
-              //   thumbColor: Color(0xff52D7BF),
-              //   inactiveColor: Colors.grey,
-            
-              //   label:
-              //       '${_currentPosition.inMinutes}:${_currentPosition.inSeconds.remainder(60).toString().padLeft(2, '0')} / ${_totalDuration.inMinutes}:${_totalDuration.inSeconds.remainder(60).toString().padLeft(2, '0')}',
-              //   activeColor: Color(0xff52D7BF),
-              //   min: 0,
-              //   max: _totalDuration.inMilliseconds.toDouble(),
-              //   value: _currentPosition.inMilliseconds
-              //       .clamp(0, _totalDuration.inMilliseconds)
-              //       .toDouble(),
-              //   onChanged: (value) {
-              //     _seekTo(Duration(milliseconds: value.toInt()));
-              //   },
-              // ),
+                  // Slider
+                  Slider(
+                    min: 0,
+                    max: _totalDuration.inMilliseconds.toDouble(),
+                    value: _currentPosition.inMilliseconds
+                        .clamp(0, _totalDuration.inMilliseconds)
+                        .toDouble(),
+                    onChanged: (value) {
+                      _audioPlayer.seek(Duration(milliseconds: value.toInt()));
+                    },
+                    activeColor: Color(0xff52D7BF),
+                    inactiveColor: Colors.grey,
+                  ),
+                ],
+              ),
               Container(
                 width: 350.w,
                 height: 100.h,
@@ -219,7 +209,7 @@ bool _isLooping = false;
                 ),
                 child: Column(
                   children: [
-                    SizedBox(height: 10.h,),
+                    SizedBox(height: 10.h),
                     Text(
                       'Up next',
                       style: GoogleFonts.bakbakOne(
@@ -229,7 +219,11 @@ bool _isLooping = false;
                     ),
                     SizedBox(height: 10.h),
                     Text(
-                      '${_mp3Files[audioIndex < _mp3Files.length - 1 ? audioIndex + 1 : 0].split('/').last}',
+                      _mp3Files[audioIndex < _mp3Files.length - 1
+                              ? audioIndex + 1
+                              : 0]
+                          .split('/')
+                          .last,
                       style: TextStyle(color: Colors.white, fontSize: 16),
                       textAlign: TextAlign.center,
                     ),
@@ -240,10 +234,9 @@ bool _isLooping = false;
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                
                   IconButton(
                     onPressed: _playPrevious,
-                    icon:  Icon(
+                    icon: Icon(
                       Icons.skip_previous_rounded,
                       size: 30.r,
                       color: Colors.white,
@@ -261,25 +254,27 @@ bool _isLooping = false;
                   ),
                   IconButton(
                     onPressed: _playNext,
-                    icon:  Icon(
+                    icon: Icon(
                       Icons.skip_next_rounded,
                       color: Colors.white,
                       size: 30.r,
                     ),
                   ),
-                IconButton(
-          onPressed: () {
-            setState(() => _isLooping = !_isLooping);
-            _audioPlayer.setReleaseMode(_isLooping ? ReleaseMode.loop : ReleaseMode.release);
-          },
-          icon: Icon(
-            Icons.loop,
-            color: _isLooping ? const Color(0xff52D7BF) : Colors.white,
-            size: 30.r,
-          ),
-        ),
-        
-        
+                  IconButton(
+                    onPressed: () {
+                      setState(() => _isLooping = !_isLooping);
+                      _audioPlayer.setReleaseMode(
+                        _isLooping ? ReleaseMode.loop : ReleaseMode.release,
+                      );
+                    },
+                    icon: Icon(
+                      Icons.loop,
+                      color: _isLooping
+                          ? const Color(0xff52D7BF)
+                          : Colors.white,
+                      size: 30.r,
+                    ),
+                  ),
                 ],
               ),
             ],

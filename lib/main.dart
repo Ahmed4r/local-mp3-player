@@ -1,9 +1,10 @@
+import 'package:audioplayer/screens/audioplayer_screen.dart';
+import 'package:audioplayer/screens/homepage.dart';
+import 'package:audioplayer/screens/onboardingScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:onboarding/screens/audioplayer_screen.dart';
-import 'package:onboarding/screens/homepage.dart';
-import 'package:onboarding/screens/onboardingScreen.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
@@ -16,7 +17,7 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   final bool seenOnboarding;
-   MyApp({super.key,required this.seenOnboarding});
+   const MyApp({super.key,required this.seenOnboarding});
 
   @override
   Widget build(BuildContext context) {
@@ -25,8 +26,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         home: OnBoardingPage(),
-      // initialRoute: seenOnboarding ? Homepage.routeName : OnBoardingPage.routeName,
-      initialRoute: OnBoardingPage.routeName,
+      initialRoute: seenOnboarding ? Homepage.routeName : OnBoardingPage.routeName,
         routes: {
           OnBoardingPage.routeName: (context) => const OnBoardingPage(),
           Homepage.routeName: (context) => const Homepage(),
