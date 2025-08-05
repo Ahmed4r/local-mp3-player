@@ -1,9 +1,12 @@
 import 'dart:async';
+import 'dart:developer';
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_media_metadata/flutter_media_metadata.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 
 class AudioplayerScreen extends StatefulWidget {
   static const String routeName = 'player';
@@ -28,6 +31,29 @@ class _AudioplayerScreenState extends State<AudioplayerScreen> {
   late StreamSubscription<Duration> _durationSubscription;
   late StreamSubscription<Duration> _positionSubscription;
   bool _isLooping = false;
+  Uint8List? albumImageBytes;
+
+  String? artistName;
+  String? albumName;
+
+  Future<void> getAlbumImage() async {
+    try {
+      final file = File(audioPath);
+      final metadata = await MetadataRetriever.fromFile(file);
+
+      if (metadata.albumArt != null) {
+        albumImageBytes = metadata.albumArt;
+      }
+      artistName = metadata.albumArtistName;
+      albumName = metadata.albumName;
+      log(artistName.toString());
+      log(albumName.toString());
+
+      setState(() {});
+    } catch (e) {
+      log('Error reading album art: $e');
+    }
+  }
 
   @override
   void initState() {
@@ -76,6 +102,7 @@ class _AudioplayerScreenState extends State<AudioplayerScreen> {
 
     _audioPlayer.setSource(DeviceFileSource(audioPath));
     _audioPlayer.resume();
+    getAlbumImage();
   }
 
   @override
@@ -106,6 +133,7 @@ class _AudioplayerScreenState extends State<AudioplayerScreen> {
     audioTitle = audioPath.split('/').last;
     _audioPlayer.setSource(DeviceFileSource(audioPath));
     _audioPlayer.resume();
+    getAlbumImage();
     if (mounted) setState(() {});
   }
 
@@ -116,6 +144,7 @@ class _AudioplayerScreenState extends State<AudioplayerScreen> {
     audioTitle = audioPath.split('/').last;
     _audioPlayer.setSource(DeviceFileSource(audioPath));
     _audioPlayer.resume();
+    getAlbumImage();
     if (mounted) setState(() {});
   }
 
@@ -151,7 +180,10 @@ class _AudioplayerScreenState extends State<AudioplayerScreen> {
                   image: DecorationImage(
                     filterQuality: FilterQuality.high,
                     fit: BoxFit.cover,
-                    image: AssetImage('assets/Song Cover Art 1.png'),
+                    image: albumImageBytes != null
+                        ? MemoryImage(albumImageBytes!)
+                        : const AssetImage('assets/Song Cover Art 1.png')
+                              as ImageProvider,
                   ),
                 ),
               ),
@@ -168,6 +200,20 @@ class _AudioplayerScreenState extends State<AudioplayerScreen> {
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 20.h),
+              if (artistName != null)
+                Text(
+                  artistName!,
+                  style: TextStyle(color: Colors.grey, fontSize: 16.sp),
+                  textAlign: TextAlign.center,
+                ),
+
+              if (albumName != null)
+                Text(
+                  albumName!,
+                  style: TextStyle(color: Colors.grey, fontSize: 14.sp),
+                  textAlign: TextAlign.center,
+                ),
+
               Column(
                 children: [
                   // Duration Text

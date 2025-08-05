@@ -10,7 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   GoogleFonts.config.allowRuntimeFetching = true;
-   final prefs = await SharedPreferences.getInstance();
+  final prefs = await SharedPreferences.getInstance();
   final seenOnboarding = prefs.getBool('onboarding_done') ?? false;
    runApp(MyApp(seenOnboarding: seenOnboarding));
 }

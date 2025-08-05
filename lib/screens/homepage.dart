@@ -1,7 +1,11 @@
+import 'dart:developer';
+import 'dart:typed_data';
+
 import 'package:audioplayer/screens/audioplayer_screen.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_media_metadata/flutter_media_metadata.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'dart:io';
@@ -26,6 +30,8 @@ class _HomepageState extends State<Homepage> {
   void initState() {
     super.initState();
     _loadSavedFolder();
+    getAlbumImage();
+
   }
 
   Future<void> _loadSavedFolder() async {
@@ -87,6 +93,30 @@ class _HomepageState extends State<Homepage> {
     }
     return files;
   }
+  Uint8List? albumImageBytes;
+  
+  late String audioPath;
+ 
+  String? artistName;
+  String? albumName;
+    Future<void> getAlbumImage() async {
+    try {
+      final file = File(audioPath);
+      final metadata = await MetadataRetriever.fromFile(file);
+
+      if (metadata.albumArt != null) {
+        albumImageBytes = metadata.albumArt;
+      }
+      artistName = metadata.albumArtistName;
+      albumName = metadata.albumName;
+      log(artistName.toString());
+      log(albumName.toString());
+
+      setState(() {});
+    } catch (e) {
+      log('Error reading album art: $e');
+    }
+  }
 
   @override
 
@@ -96,7 +126,8 @@ class _HomepageState extends State<Homepage> {
     return Scaffold(
       backgroundColor: Colors.black,  // Set scaffold background to black
       appBar: AppBar(
-        leading: Icon(Icons.dark_mode,color: Colors.white,),
+        
+        // leading: Icon(Icons.dark_mode,color: Colors.white,),
         backgroundColor: Colors.black,  // AppBar background black
         title: const Text(
           'Audio Player',
@@ -127,7 +158,9 @@ class _HomepageState extends State<Homepage> {
                       return ListTile(
                         splashColor: Colors.amber,
                        contentPadding: EdgeInsets.all(10.r),
-                        leading: Image.asset('assets/apple-music-note.jpg',filterQuality: FilterQuality.high,scale: 4.sp,),
+                        leading:albumImageBytes != null
+          ? Image.memory(albumImageBytes!)
+          : Image.asset('assets/apple-music-note.jpg',filterQuality: FilterQuality.high,scale: 4.sp,),
                         title: Text(
                           p.basename(_mp3Files[index]),
                           style:  TextStyle(color: Colors.white,fontSize: 18.sp),  // Text white

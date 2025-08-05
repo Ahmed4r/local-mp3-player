@@ -23,6 +23,7 @@ class OnBoardingPageState extends State<OnBoardingPage> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('onboarding_done', true);
     Navigator.of(context).pushReplacementNamed(Homepage.routeName);
+   
   }
 
   @override
@@ -39,7 +40,7 @@ class OnBoardingPageState extends State<OnBoardingPage> {
 
   void _onIntroEnd(context) {
     _completeOnboarding(context);
-    Navigator.of(context).pushNamed(Homepage.routeName);
+    Navigator.of(context).pushReplacementNamed(Homepage.routeName);
   }
 
   Widget _buildImage(String assetName, [double width = 350]) {
