@@ -30,6 +30,7 @@ class _AudioplayerScreenState extends State<AudioplayerScreen> {
   late StreamSubscription<PlayerState> _playerStateSubscription;
   late StreamSubscription<Duration> _durationSubscription;
   late StreamSubscription<Duration> _positionSubscription;
+
   bool _isLooping = false;
   Uint8List? albumImageBytes;
 
@@ -69,10 +70,9 @@ class _AudioplayerScreenState extends State<AudioplayerScreen> {
     _playerStateSubscription = _audioPlayer.onPlayerStateChanged.listen((
       state,
     ) {
-      if (!mounted) return; // Check mounted before setState
-      setState(() {
-        _isPlaying = state == PlayerState.playing;
-      });
+      if (state == PlayerState.completed && !_isLooping) {
+        _playNext();
+      }
     });
 
     _durationSubscription = _audioPlayer.onDurationChanged.listen((duration) {
@@ -122,10 +122,6 @@ class _AudioplayerScreenState extends State<AudioplayerScreen> {
     }
   }
 
-  void _seekTo(Duration position) {
-    _audioPlayer.seek(position);
-  }
-
   void _playNext() {
     if (_mp3Files.isEmpty) return;
     audioIndex = (audioIndex + 1) % _mp3Files.length;
@@ -170,16 +166,17 @@ class _AudioplayerScreenState extends State<AudioplayerScreen> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16.r),
           child: Column(
             children: [
               Container(
-                height: 380.h,
+                height: 360.h,
                 width: double.infinity,
                 decoration: BoxDecoration(
                   image: DecorationImage(
                     filterQuality: FilterQuality.high,
                     fit: BoxFit.cover,
+                    scale: 4.sp,
                     image: albumImageBytes != null
                         ? MemoryImage(albumImageBytes!)
                         : const AssetImage('assets/Song Cover Art 1.png')
@@ -230,7 +227,6 @@ class _AudioplayerScreenState extends State<AudioplayerScreen> {
                       ),
                     ],
                   ),
-
                   // Slider
                   Slider(
                     min: 0,
@@ -241,6 +237,7 @@ class _AudioplayerScreenState extends State<AudioplayerScreen> {
                     onChanged: (value) {
                       _audioPlayer.seek(Duration(milliseconds: value.toInt()));
                     },
+
                     activeColor: Color(0xff52D7BF),
                     inactiveColor: Colors.grey,
                   ),
