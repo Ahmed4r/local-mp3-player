@@ -25,7 +25,7 @@ class _AudioplayerScreenState extends State<AudioplayerScreen> {
 
   Duration _currentPosition = Duration.zero;
   Duration _totalDuration = Duration.zero;
-  bool _isPlaying = false;
+   bool _isPlaying = false;
 
   late StreamSubscription<PlayerState> _playerStateSubscription;
   late StreamSubscription<Duration> _durationSubscription;
@@ -38,57 +38,60 @@ class _AudioplayerScreenState extends State<AudioplayerScreen> {
   String? albumName;
 
   Future<void> getAlbumImage() async {
-    try {
-      final file = File(audioPath);
-      final metadata = await MetadataRetriever.fromFile(file);
+  try {
+    albumImageBytes = null;
+    artistName = null;
+    albumName = null;
+    setState(() {}); // عشان يمسح القديم فورًا
 
-      if (metadata.albumArt != null) {
-        albumImageBytes = metadata.albumArt;
-      }
-      artistName = metadata.albumArtistName;
-      albumName = metadata.albumName;
-      log(artistName.toString());
-      log(albumName.toString());
+    final file = File(audioPath);
+    final metadata = await MetadataRetriever.fromFile(file);
 
-      setState(() {});
-    } catch (e) {
-      log('Error reading album art: $e');
+    if (metadata.albumArt != null) {
+      albumImageBytes = metadata.albumArt;
     }
+    artistName = metadata.albumArtistName;
+    albumName = metadata.albumName;
+
+    setState(() {});
+  } catch (e) {
+    log('Error reading album art: $e');
   }
+}
+
 
   @override
-  void initState() {
-    super.initState();
+  @override
+void initState() {
+  super.initState();
 
-    _audioPlayer = AudioPlayer();
-    _audioPlayer.onDurationChanged.listen((duration) {
-      if (mounted) {
-        setState(() => _totalDuration = duration);
-      }
-    });
+  _audioPlayer = AudioPlayer();
 
-    _playerStateSubscription = _audioPlayer.onPlayerStateChanged.listen((
-      state,
-    ) {
-      if (state == PlayerState.completed && !_isLooping) {
-        _playNext();
-      }
-    });
-
-    _durationSubscription = _audioPlayer.onDurationChanged.listen((duration) {
-      if (!mounted) return;
+  _playerStateSubscription = _audioPlayer.onPlayerStateChanged.listen((state) {
+    if (mounted) {
       setState(() {
-        _totalDuration = duration;
+        _isPlaying = state == PlayerState.playing;
       });
-    });
+    }
 
-    _positionSubscription = _audioPlayer.onPositionChanged.listen((position) {
-      if (!mounted) return;
-      setState(() {
-        _currentPosition = position;
-      });
-    });
-  }
+    if (state == PlayerState.completed && !_isLooping) {
+      _playNext();
+    }
+  });
+
+  _durationSubscription = _audioPlayer.onDurationChanged.listen((duration) {
+    if (mounted) {
+      setState(() => _totalDuration = duration);
+    }
+  });
+
+  _positionSubscription = _audioPlayer.onPositionChanged.listen((position) {
+    if (mounted) {
+      setState(() => _currentPosition = position);
+    }
+  });
+}
+
 
   @override
   void didChangeDependencies() {
@@ -101,8 +104,9 @@ class _AudioplayerScreenState extends State<AudioplayerScreen> {
     audioIndex = args['audioIndex'] ?? 0;
 
     _audioPlayer.setSource(DeviceFileSource(audioPath));
+     getAlbumImage();
     _audioPlayer.resume();
-    getAlbumImage();
+   
   }
 
   @override
@@ -114,22 +118,24 @@ class _AudioplayerScreenState extends State<AudioplayerScreen> {
     super.dispose();
   }
 
-  void _playPause() {
-    if (_isPlaying) {
-      _audioPlayer.pause();
-    } else {
-      _audioPlayer.resume();
-    }
+  void _playPause() async {
+  if (_isPlaying) {
+    await _audioPlayer.pause();
+  } else {
+    await _audioPlayer.resume();
   }
+}
 
-  void _playNext() {
+  void _playNext() async{
+   
     if (_mp3Files.isEmpty) return;
     audioIndex = (audioIndex + 1) % _mp3Files.length;
     audioPath = _mp3Files[audioIndex];
     audioTitle = audioPath.split('/').last;
     _audioPlayer.setSource(DeviceFileSource(audioPath));
+    await  getAlbumImage();
     _audioPlayer.resume();
-    getAlbumImage();
+   
     if (mounted) setState(() {});
   }
 
@@ -139,8 +145,9 @@ class _AudioplayerScreenState extends State<AudioplayerScreen> {
     audioPath = _mp3Files[audioIndex];
     audioTitle = audioPath.split('/').last;
     _audioPlayer.setSource(DeviceFileSource(audioPath));
+     getAlbumImage();
     _audioPlayer.resume();
-    getAlbumImage();
+   
     if (mounted) setState(() {});
   }
 
@@ -230,7 +237,10 @@ class _AudioplayerScreenState extends State<AudioplayerScreen> {
                   // Slider
                   Slider(
                     min: 0,
-                    max: _totalDuration.inMilliseconds.toDouble(),
+                   max: _totalDuration.inMilliseconds > 0
+    ? _totalDuration.inMilliseconds.toDouble()
+    : 1.0,
+
                     value: _currentPosition.inMilliseconds
                         .clamp(0, _totalDuration.inMilliseconds)
                         .toDouble(),
@@ -261,12 +271,12 @@ class _AudioplayerScreenState extends State<AudioplayerScreen> {
                       ),
                     ),
                     SizedBox(height: 10.h),
-                    Text(
+                    Text(_mp3Files.isNotEmpty?
                       _mp3Files[audioIndex < _mp3Files.length - 1
                               ? audioIndex + 1
                               : 0]
                           .split('/')
-                          .last,
+                          .last: "no songs",
                       style: TextStyle(color: Colors.white, fontSize: 16),
                       textAlign: TextAlign.center,
                     ),
@@ -286,15 +296,16 @@ class _AudioplayerScreenState extends State<AudioplayerScreen> {
                     ),
                   ),
                   IconButton(
-                    onPressed: _playPause,
-                    icon: Icon(
-                      _isPlaying
-                          ? Icons.pause_circle_filled
-                          : Icons.play_circle_fill,
-                      size: 70.r,
-                      color: Colors.white,
-                    ),
-                  ),
+  onPressed: _playPause,
+  icon: Icon(
+    _isPlaying
+      ? Icons.pause_circle_filled
+      : Icons.play_circle_fill,
+    size: 70.r,
+    color: Colors.white,
+  ),
+),
+
                   IconButton(
                     onPressed: _playNext,
                     icon: Icon(

@@ -198,7 +198,7 @@ class _HomepageState extends State<Homepage> {
                                       scale: 4.sp,
                                     )
                                   : Image.asset(
-                                      'assets/apple-music-note.jpg',
+                                      'assets/Song Cover Art 1.png',
                                       fit: BoxFit.cover,
                                       scale: 4.sp,
                                     ),
