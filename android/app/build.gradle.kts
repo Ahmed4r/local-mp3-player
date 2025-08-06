@@ -13,6 +13,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_18
         targetCompatibility = JavaVersion.VERSION_18
     }
+    aaptOptions {
+    additionalParameters += "--no-version-vectors"
+   }
+
 
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_18.toString()
