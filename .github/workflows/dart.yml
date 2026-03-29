@@ -14,7 +14,6 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          architecture: x64
 
       - name: Flutter pub get
         run: flutter pub get
@@ -25,12 +24,12 @@ jobs:
           pod install
           cd ..
 
-      - name: Build Unsigned App
+      - name: Build Unsigned IPA
         run: |
-          # 1. Prepare Flutter dependencies
+          # 1. Prepare Flutter (assets, icons, dart code)
           flutter build ios --release --no-codesign --no-tree-shake-icons
           
-          # 2. Force compile without signing using xcodebuild
+          # 2. Compile using xcodebuild (Bypasses 'Development Team' requirement)
           xcodebuild -workspace ios/Runner.xcworkspace \
                      -scheme Runner \
                      -configuration Release \
@@ -38,17 +37,17 @@ jobs:
                      CODE_SIGNING_ALLOWED=NO \
                      CODE_SIGNING_REQUIRED=NO \
                      CODE_SIGN_IDENTITY="" \
-                     PROVISIONING_PROFILE=""
+                     PROVISIONING_PROFILE="" \
+                     COMPILER_INDEX_STORE_ENABLE=NO
 
-      - name: Create IPA
+      - name: Create Payload and Zip
         run: |
           cd build/ios/iphoneos
           mkdir -p Payload
-          # Use 'cp' instead of 'mv' to be safer
           cp -r Runner.app Payload/
           zip -qq -r -9 FlutterIpaExport.ipa Payload
 
-      - name: Upload IPA Artifact
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: ios-ipa
