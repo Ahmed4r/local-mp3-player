@@ -1,6 +1,4 @@
-import 'package:audioplayer/screens/audioplayer_screen.dart';
 import 'package:audioplayer/screens/homepage.dart';
-import 'package:audioplayer/screens/onboardingScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -25,14 +23,7 @@ class MyApp extends StatelessWidget {
       designSize: Size(404, 812),
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: OnBoardingPage(),
-      initialRoute: seenOnboarding ? Homepage.routeName : OnBoardingPage.routeName,
-        routes: {
-          OnBoardingPage.routeName: (context) => const OnBoardingPage(),
-          Homepage.routeName: (context) => const Homepage(),
-          AudioplayerScreen.routeName : (context) => const AudioplayerScreen(),
-        },
-        
+        home: Homepage(),
       ),
     );
   }
