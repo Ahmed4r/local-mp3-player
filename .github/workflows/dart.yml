@@ -5,27 +5,32 @@ on:
 
 jobs:
   build-ios:
-    name: 🎉 iOS Build
     runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
 
-      - uses: subosito/flutter-action@v2
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          channel: stable
           architecture: x64
 
-      - run: flutter pub get
+      - name: Flutter pub get
+        run: flutter pub get
 
-      # Ensure the Podfile has the correct platform
+      - name: Change CODE_SIGN_STYLE to Manual
+        run: |
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
+
       - name: Set iOS deployment target
         run: |
           cd ios
-          if ! grep -q "platform :ios, '15.5'" Podfile; then
-            echo "platform :ios, '15.5'" | cat - Podfile > temp && mv temp Podfile
+          if ! grep -q "platform :ios, '16.0'" Podfile; then
+            echo "platform :ios, '16.0'" | cat - Podfile > temp && mv temp Podfile
           fi
           cd ..
-      # Clean and reinstall CocoaPods
+
       - name: Clean and update CocoaPods
         run: |
           rm -f ios/Podfile.lock
@@ -34,23 +39,25 @@ jobs:
           pod deintegrate
           pod install
           cd ..
-      - run: flutter build ios --release --no-codesign
 
-      - run: mkdir Payload
+      - name: Disable Code Signing
+        run: |
+          sed -i '' 's/DEVELOPMENT_TEAM = .*/DEVELOPMENT_TEAM = "";/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGN_IDENTITY = .*/CODE_SIGN_IDENTITY = "";/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = .*/PROVISIONING_PROFILE_SPECIFIER = "";/g' ios/Runner.xcodeproj/project.pbxproj
+
+      - name: Build iOS (no signing)
+        run: flutter build ios --release --no-codesign --no-tree-shake-icons
+
+      - name: Create IPA
         working-directory: build/ios/iphoneos
+        run: |
+          mkdir -p Payload
+          mv Runner.app Payload/
+          zip -qq -r -9 FlutterIpaExport.ipa Payload
 
-      - run: mv Runner.app/ Payload
-        working-directory: build/ios/iphoneos
-
-      - name: Zip output
-        run: zip -qq -r -9 FlutterIpaExport.ipa Payload
-        working-directory: build/ios/iphoneos
-
-      - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@v2
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/ios/iphoneos/FlutterIpaExport.ipa
-          tag: v1.0
-          overwrite: true
-          body: "This is first release"
+          name: ios-ipa
+          path: build/ios/iphoneos/FlutterIpaExport.ipa
