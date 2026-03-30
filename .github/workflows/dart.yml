@@ -1,97 +1,65 @@
 name: iOS-ipa-build
+
 on:
-  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
 jobs:
   build-ios:
     runs-on: macos-latest
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           architecture: x64
-          
+
       - name: Flutter pub get
         run: flutter pub get
-        
-      - name: Fix Podfile platform version
+
+      # Ensure NO code signing is required or set in the project
+      - name: Remove All Code Signing and Validation Settings
+        run: |
+          sed -i '' 's/"CODE_SIGN_IDENTITY\[sdk=iphoneos\*\]" = "iPhone Developer";/"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/VALIDATE_PRODUCT = YES;/VALIDATE_PRODUCT = NO;/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/DEVELOPMENT_TEAM = .*/DEVELOPMENT_TEAM = "";/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGN_IDENTITY = .*/CODE_SIGN_IDENTITY = "";/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = .*/PROVISIONING_PROFILE_SPECIFIER = "";/g' ios/Runner.xcodeproj/project.pbxproj
+
+      - name: Set iOS deployment target
         run: |
           cd ios
-          sed -i '' '/^platform :ios/d' Podfile
-          sed -i '' "1s/^/platform :ios, '16.0'\n/" Podfile
+          if ! grep -q "platform :ios, '15.0'" Podfile; then
+            echo "platform :ios, '15.0'" | cat - Podfile > temp && mv temp Podfile
+          fi
           cd ..
-          
-      - name: Clean and install CocoaPods
+
+      - name: Clean and update CocoaPods
         run: |
           rm -f ios/Podfile.lock
-          rm -rf ios/Pods
           cd ios
-          pod install --repo-update
+          pod repo update
+          pod deintegrate
+          pod install
           cd ..
-          
-      - name: Disable Code Signing
-        run: |
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
-          perl -i -pe 's/DEVELOPMENT_TEAM = .*?;/DEVELOPMENT_TEAM = "";/g' ios/Runner.xcodeproj/project.pbxproj
-          perl -i -pe 's/CODE_SIGN_IDENTITY = .*?;/CODE_SIGN_IDENTITY = "";/g' ios/Runner.xcodeproj/project.pbxproj
-          perl -i -pe 's/PROVISIONING_PROFILE_SPECIFIER = .*?;/PROVISIONING_PROFILE_SPECIFIER = "";/g' ios/Runner.xcodeproj/project.pbxproj
-          perl -i -pe 's/"CODE_SIGN_IDENTITY\[sdk=iphoneos\*\]" = .*?;/"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";/g' ios/Runner.xcodeproj/project.pbxproj
-          
-      - name: Lock project file to prevent Flutter migration
-        run: |
-          chmod 444 ios/Runner.xcodeproj/project.pbxproj
-          chmod 444 ios/Runner.xcodeproj/project.xcworkspace/contents.xcworkspacedata
-          
-      - name: Build iOS (no signing)
+
+      - name: Build iOS (Release, Unsigned)
         run: flutter build ios --release --no-codesign --no-tree-shake-icons
-        continue-on-error: true
-        
-      - name: Unlock project files
-        run: |
-          chmod 644 ios/Runner.xcodeproj/project.pbxproj
-          chmod 644 ios/Runner.xcodeproj/project.xcworkspace/contents.xcworkspacedata
-          
-      - name: Build with xcodebuild (fallback)
-        if: failure()
-        run: |
-          cd ios
-          xcodebuild clean \
-            -workspace Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release
-            
-          xcodebuild archive \
-            -workspace Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release \
-            -archivePath build/Runner.xcarchive \
-            -sdk iphoneos \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            DEVELOPMENT_TEAM=""
-          cd ..
-          
-      - name: Create IPA from Flutter build
-        if: success()
-        run: |
-          cd build/ios/iphoneos
-          mkdir -p Payload
-          cp -r Runner.app Payload/
-          zip -qq -r -9 ../../../FlutterIpaExport.ipa Payload
-          cd ../../..
-          
-      - name: Create IPA from xcodebuild archive
-        if: failure()
+
+      - name: Create IPA
+        working-directory: build/ios/iphoneos
         run: |
           mkdir -p Payload
-          cp -r ios/build/Runner.xcarchive/Products/Applications/Runner.app Payload/
+          mv Runner.app Payload/
           zip -qq -r -9 FlutterIpaExport.ipa Payload
-          
+
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ios-ipa
-          path: FlutterIpaExport.ipa
+          path: build/ios/iphoneos/FlutterIpaExport.ipa
