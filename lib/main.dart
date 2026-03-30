@@ -1,3 +1,4 @@
+import 'package:audioplayer/screens/audioplayer_screen.dart';
 import 'package:audioplayer/screens/homepage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -23,7 +24,11 @@ class MyApp extends StatelessWidget {
       designSize: Size(404, 812),
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: Homepage(),
+        initialRoute:  Homepage.routeName,
+        routes: {
+          Homepage.routeName: (context) => const Homepage(),
+          AudioplayerScreen.routeName: (context) => const AudioplayerScreen(),
+        },
       ),
     );
   }
