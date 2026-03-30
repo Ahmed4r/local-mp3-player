@@ -65,7 +65,7 @@ post_install do |installer|
       ]
       
       # Ensure deployment target matches the platform version
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.0'
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
     end
   end
 end
