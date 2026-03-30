@@ -19,9 +19,13 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
 
-      - name: Change CODE_SIGN_STYLE to Manual
+      - name: Remove All Code Signing and Validation Settings
         run: |
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/"CODE_SIGN_IDENTITY\[sdk=iphoneos\*\]" = "iPhone Developer";/"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/VALIDATE_PRODUCT = YES;/VALIDATE_PRODUCT = NO;/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/DEVELOPMENT_TEAM = .*/DEVELOPMENT_TEAM = "";/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGN_IDENTITY = .*/CODE_SIGN_IDENTITY = "";/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = .*/PROVISIONING_PROFILE_SPECIFIER = "";/g' ios/Runner.xcodeproj/project.pbxproj
 
       - name: Set iOS deployment target
         run: |
@@ -40,11 +44,7 @@ jobs:
           pod install
           cd ..
 
-      - name: Disable Code Signing
-        run: |
-          sed -i '' 's/DEVELOPMENT_TEAM = .*/DEVELOPMENT_TEAM = "";/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/CODE_SIGN_IDENTITY = .*/CODE_SIGN_IDENTITY = "";/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = .*/PROVISIONING_PROFILE_SPECIFIER = "";/g' ios/Runner.xcodeproj/project.pbxproj
+      
 
       - name: Build iOS (no signing)
         run: flutter build ios --release --no-codesign --no-tree-shake-icons
