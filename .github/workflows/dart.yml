@@ -22,45 +22,51 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
 
-      - name: Remove All Code Signing and Validation Settings
+      - name: Configure Xcode for no code signing
         run: |
-          sed -i '' 's/"CODE_SIGN_IDENTITY\[sdk=iphoneos\*\]" = "iPhone Developer";/"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";/g' ios/Runner.xcodeproj/project.pbxproj || true
-          sed -i '' 's/VALIDATE_PRODUCT = YES;/VALIDATE_PRODUCT = NO;/g' ios/Runner.xcodeproj/project.pbxproj || true
-          sed -i '' 's/DEVELOPMENT_TEAM = .*/DEVELOPMENT_TEAM = "";/g' ios/Runner.xcodeproj/project.pbxproj || true
-          sed -i '' 's/CODE_SIGN_IDENTITY = .*/CODE_SIGN_IDENTITY = "";/g' ios/Runner.xcodeproj/project.pbxproj || true
-          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = .*/PROVISIONING_PROFILE_SPECIFIER = "";/g' ios/Runner.xcodeproj/project.pbxproj || true
+          # Update project.pbxproj
+          sed -i '' 's/DEVELOPMENT_TEAM = .*/DEVELOPMENT_TEAM = "";/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGN_IDENTITY = .*/CODE_SIGN_IDENTITY = "";/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGN_STYLE = .*/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = .*/PROVISIONING_PROFILE_SPECIFIER = "";/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' '/CODE_SIGN_IDENTITY/d' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' '/DEVELOPMENT_TEAM/d' ios/Runner.xcodeproj/project.pbxproj
+          
+          # Add CODE_SIGNING_ALLOWED = NO to all build configurations
+          perl -i -pe 's/(buildSettings = \{)/$1\n\t\t\t\tCODE_SIGNING_ALLOWED = NO;\n\t\t\t\tCODE_SIGNING_REQUIRED = NO;/g' ios/Runner.xcodeproj/project.pbxproj
 
       - name: Set iOS deployment target
         run: |
           cd ios
           if ! grep -q "platform :ios, '15.0'" Podfile; then
-            echo "platform :ios, '15.0'" | cat - Podfile > temp && mv temp Podfile
+            sed -i '' "1i\\
+            platform :ios, '15.0'
+            " Podfile
           fi
-          cd ..
 
       - name: Clean and update CocoaPods
         run: |
-          rm -f ios/Podfile.lock
           cd ios
+          rm -f Podfile.lock
+          rm -rf Pods/
           pod repo update
-          pod deintegrate
           pod install
           cd ..
 
-      - name: Build iOS (no signing)
+      - name: Build iOS archive (no signing)
+        run: |
+          flutter build ios --release --no-codesign --no-tree-shake-icons
         env:
           CODE_SIGNING_ALLOWED: "NO"
           CODE_SIGNING_REQUIRED: "NO"
-          CODE_SIGN_IDENTITY: ""
-          DEVELOPMENT_TEAM: ""
-        run: flutter build ios --release --no-codesign --no-tree-shake-icons
 
       - name: Create IPA
-        working-directory: build/ios/iphoneos
         run: |
+          cd build/ios/iphoneos
           mkdir -p Payload
-          mv Runner.app Payload/
-          zip -qq -r -9 FlutterIpaExport.ipa Payload
+          cp -r Runner.app Payload/
+          zip -r FlutterIpaExport.ipa Payload
+          rm -rf Payload
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
