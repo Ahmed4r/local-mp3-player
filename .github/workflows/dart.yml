@@ -22,49 +22,81 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
 
-      - name: Configure Xcode for no code signing
-        run: |
-          # Update project.pbxproj
-          sed -i '' 's/DEVELOPMENT_TEAM = .*/DEVELOPMENT_TEAM = "";/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/CODE_SIGN_IDENTITY = .*/CODE_SIGN_IDENTITY = "";/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/CODE_SIGN_STYLE = .*/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = .*/PROVISIONING_PROFILE_SPECIFIER = "";/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' '/CODE_SIGN_IDENTITY/d' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' '/DEVELOPMENT_TEAM/d' ios/Runner.xcodeproj/project.pbxproj
-          
-          # Add CODE_SIGNING_ALLOWED = NO to all build configurations
-          perl -i -pe 's/(buildSettings = \{)/$1\n\t\t\t\tCODE_SIGNING_ALLOWED = NO;\n\t\t\t\tCODE_SIGNING_REQUIRED = NO;/g' ios/Runner.xcodeproj/project.pbxproj
-
-      - name: Set iOS deployment target
+      - name: Set iOS deployment target in Podfile
         run: |
           cd ios
-          if ! grep -q "platform :ios, '15.0'" Podfile; then
-            sed -i '' "1i\\
-            platform :ios, '15.0'
-            " Podfile
+          if ! grep -q "platform :ios" Podfile; then
+            echo "platform :ios, '15.0'" | cat - Podfile > temp && mv temp Podfile
           fi
-
-      - name: Clean and update CocoaPods
-        run: |
-          cd ios
-          rm -f Podfile.lock
-          rm -rf Pods/
-          pod repo update
-          pod install
           cd ..
 
-      - name: Build iOS archive (no signing)
+      - name: Aggressive Code Signing Removal
         run: |
-          flutter build ios --release --no-codesign --no-tree-shake-icons
-        env:
-          CODE_SIGNING_ALLOWED: "NO"
-          CODE_SIGNING_REQUIRED: "NO"
+          PBXPROJ="ios/Runner.xcodeproj/project.pbxproj"
+          
+          # Backup original
+          cp "$PBXPROJ" "${PBXPROJ}.backup"
+          
+          # Remove all DEVELOPMENT_TEAM lines
+          sed -i '' '/DEVELOPMENT_TEAM/d' "$PBXPROJ"
+          
+          # Remove all CODE_SIGN_IDENTITY lines  
+          sed -i '' '/CODE_SIGN_IDENTITY/d' "$PBXPROJ"
+          
+          # Remove all PROVISIONING_PROFILE lines
+          sed -i '' '/PROVISIONING_PROFILE/d' "$PBXPROJ"
+          
+          # Remove CODE_SIGN_STYLE
+          sed -i '' '/CODE_SIGN_STYLE/d' "$PBXPROJ"
+          
+          # Add CODE_SIGNING_ALLOWED and CODE_SIGNING_REQUIRED to buildSettings
+          awk '/buildSettings = {/ && !done {print; print "\t\t\t\tCODE_SIGNING_ALLOWED = NO;"; print "\t\t\t\tCODE_SIGNING_REQUIRED = NO;"; done=1; next}1' "$PBXPROJ" > "${PBXPROJ}.tmp"
+          mv "${PBXPROJ}.tmp" "$PBXPROJ"
+          
+          # Do it again for all buildSettings occurrences
+          perl -i -pe 's/(buildSettings = \{)/$1\n\t\t\t\tCODE_SIGNING_ALLOWED = NO;\n\t\t\t\tCODE_SIGNING_REQUIRED = NO;/g' "$PBXPROJ"
 
-      - name: Create IPA
+      - name: Modify Info.plist to disable signing requirements
         run: |
-          cd build/ios/iphoneos
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" ios/Runner/Info.plist || true
+
+      - name: Clean CocoaPods
+        run: |
+          cd ios
+          rm -rf Pods Podfile.lock .symlinks
+          pod cache clean --all || true
+          pod repo update
+          pod install --repo-update
+          cd ..
+
+      - name: Build iOS with xcodebuild directly
+        run: |
+          cd ios
+          xcodebuild -workspace Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath ../build/ios \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            build
+          cd ..
+
+      - name: Create IPA from build output
+        run: |
+          # Find the .app bundle
+          APP_PATH=$(find build/ios -name "*.app" | head -n 1)
+          
+          if [ -z "$APP_PATH" ]; then
+            echo "Error: No .app bundle found"
+            exit 1
+          fi
+          
           mkdir -p Payload
-          cp -r Runner.app Payload/
+          cp -r "$APP_PATH" Payload/
           zip -r FlutterIpaExport.ipa Payload
           rm -rf Payload
 
@@ -72,4 +104,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ios-ipa
-          path: build/ios/iphoneos/FlutterIpaExport.ipa
+          path: FlutterIpaExport.ipa
