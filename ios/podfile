@@ -63,6 +63,9 @@ post_install do |installer|
         'PERMISSION_CRITICAL_ALERTS=1',
         'PERMISSION_ASSISTANT=1',
       ]
+      config.build_settings['EXPANDED_CODE_SIGN_IDENTITY'] = ""
+      config.build_settings['CODE_SIGNING_REQUIRED'] = "NO"
+      config.build_settings['CODE_SIGNING_ALLOWED'] = "NO"
       
       # Ensure deployment target matches the platform version
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
