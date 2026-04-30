@@ -48,6 +48,7 @@ dependencies:
   # flutter_media_metadata: ^1.0.0+1
   flutter_media_metadata:
     path: packages/flutter_media_metadata
+  palette_generator: ^0.3.3+7
 dev_dependencies:
   flutter_test:
     sdk: flutter

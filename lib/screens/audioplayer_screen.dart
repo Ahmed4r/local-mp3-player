@@ -10,6 +10,7 @@ import 'package:flutter_media_metadata/flutter_media_metadata.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:palette_generator/palette_generator.dart';
 
 final AudioPlayer globalAudioPlayer = AudioPlayer();
 
@@ -78,6 +79,10 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
   Uint8List? _albumImageBytes;
   String? _artistName;
   String? _albumName;
+
+  // ADD THIS for Theme Extraction
+  Color _themeColor1 = const Color(0xFF0fbcf9);
+  Color _themeColor2 = const Color(0xFF52D7BF);
 
   // ─── Init Guard ──────────────────────────────────────────────────────────────
   // Prevents re-initialisation on every UI rebuild triggered by
@@ -218,6 +223,9 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
         _albumImageBytes = null;
         _artistName = null;
         _albumName = null;
+        // Reset to default colors when changing tracks
+        _themeColor1 = const Color(0xFF0fbcf9);
+        _themeColor2 = const Color(0xFF52D7BF);
       });
     }
     try {
@@ -228,9 +236,34 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
           _artistName = metadata.albumArtistName;
           _albumName = metadata.albumName;
         });
+
+        // ADD THIS: Extract colors if art exists
+        if (_albumImageBytes != null) {
+          _extractThemeColors(_albumImageBytes!);
+        }
       }
     } catch (e) {
       log('Metadata error: $e');
+    }
+  }
+
+  Future<void> _extractThemeColors(Uint8List imageBytes) async {
+    final imageProvider = MemoryImage(imageBytes);
+    final palette = await PaletteGenerator.fromImageProvider(imageProvider);
+
+    if (mounted) {
+      setState(() {
+        // Try to get vibrant colors, fallback to dominant, fallback to default
+        _themeColor1 =
+            palette.dominantColor?.color ??
+            palette.lightVibrantColor?.color ??
+            const Color(0xFF0fbcf9);
+
+        _themeColor2 =
+            palette.vibrantColor?.color ??
+            palette.darkVibrantColor?.color ??
+            const Color(0xFF52D7BF);
+      });
     }
   }
 
@@ -477,15 +510,16 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
             top: -60,
             left: -60,
             size: 220,
-            color: const Color(0xFF0fbcf9),
-            opacity: 0.07,
+            color: _themeColor1, // <-- Changed
+            opacity:
+                0.15, // <-- Bumped opacity to 0.15 to make it more visible!
           ),
           _orb(
             top: 180,
             right: -80,
             size: 200,
-            color: const Color(0xFF52D7BF),
-            opacity: 0.06,
+            color: _themeColor2, // <-- Changed
+            opacity: 0.15, // <-- Bumped opacity
           ),
           _orb(
             bottom: 100,
@@ -638,10 +672,10 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
               trackHeight: 3.h,
               thumbShape: RoundSliderThumbShape(enabledThumbRadius: 6.r),
               overlayShape: RoundSliderOverlayShape(overlayRadius: 14.r),
-              activeTrackColor: const Color(0xFF52D7BF),
+              activeTrackColor: _themeColor1, // <-- Changed
               inactiveTrackColor: Colors.white12,
               thumbColor: Colors.white,
-              overlayColor: const Color(0xFF52D7BF).withOpacity(0.2),
+              overlayColor: _themeColor1.withOpacity(0.2), // <-- Changed
             ),
             child: Slider(
               min: 0,
@@ -1018,10 +1052,10 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
               height: 70.r,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFF0fbcf9), Color(0xFF52D7BF)],
+                  colors: [_themeColor1, _themeColor2],
                 ),
                 boxShadow: [
                   BoxShadow(
