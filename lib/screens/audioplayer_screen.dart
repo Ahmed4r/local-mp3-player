@@ -9,6 +9,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_media_metadata/flutter_media_metadata.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+final AudioPlayer globalAudioPlayer = AudioPlayer();
 
 class AudioplayerScreen extends StatefulWidget {
   static const String routeName = 'player';
@@ -20,6 +23,34 @@ class AudioplayerScreen extends StatefulWidget {
 
 class _AudioplayerScreenState extends State<AudioplayerScreen>
     with TickerProviderStateMixin {
+  // pref
+  List<String> _favoritePaths = [];
+  bool isFav = false;
+
+  Future<void> SaveFavorites() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    pref.setStringList('favList', _favoritePaths);
+  }
+
+  Future<void> LoadFavorites() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    // Make sure the key matches what you used in audioplayer_screen ('favList')
+    _favoritePaths = pref.getStringList('favList') ?? [];
+  }
+
+  void _toggleFavorite() {
+    setState(() {
+      if (_favoritePaths.contains(audioPath)) {
+        _favoritePaths.remove(audioPath);
+        _showSnack('Removed from favorites');
+      } else {
+        _favoritePaths.add(audioPath);
+        _showSnack('Added to favorites');
+      }
+    });
+    SaveFavorites();
+  }
+
   // ─── Audio Engine ────────────────────────────────────────────────────────────
   late final AudioPlayer _audioPlayer;
   late StreamSubscription<PlayerState> _playerStateSub;
@@ -29,7 +60,9 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
 
   // ─── Playlist State ──────────────────────────────────────────────────────────
   // Holds paths for ALL supported formats: .mp3 .m4a .wav .flac .aac
-  late List<String> _audioFiles;
+  List<String> _audioFiles = [];
+  List<String> _allFiles = []; // <-- Add this line
+  bool _showingFavorites = false; // <-- Add this
   late String audioPath;
   late String audioTitle;
   int audioIndex = 0;
@@ -39,6 +72,7 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
   Duration _totalDuration = Duration.zero;
   bool _isPlaying = false;
   bool _isLooping = false;
+  bool _isShuffled = false;
 
   // ─── Metadata ────────────────────────────────────────────────────────────────
   Uint8List? _albumImageBytes;
@@ -73,11 +107,9 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
   void initState() {
     super.initState();
 
-    // FIX 1 ▸ initState is now synchronous — no async here.
-    _audioPlayer = AudioPlayer();
+    // FIX: Use the global player instead of creating a new one
+    _audioPlayer = globalAudioPlayer;
 
-    // FIX 3 ▸ ReleaseMode.stop → manual playlist control; resource is kept
-    //          alive between tracks instead of being auto-disposed.
     _audioPlayer.setReleaseMode(ReleaseMode.stop);
 
     _playerStateSub = _audioPlayer.onPlayerStateChanged.listen((state) {
@@ -122,6 +154,7 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
     _playlistBlur = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _playlistController, curve: Curves.easeOut),
     );
+    LoadFavorites();
   }
 
   @override
@@ -150,6 +183,9 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
       }
 
       _initAudio();
+      LoadFavorites().then((_) {
+        if (mounted) setState(() {});
+      });
     }
   }
 
@@ -159,7 +195,7 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
     _durationSub.cancel();
     _positionSub.cancel();
     _completionSub.cancel();
-    _audioPlayer.dispose();
+    // _audioPlayer.dispose();
     _artController.dispose();
     _playlistController.dispose();
     super.dispose();
@@ -251,6 +287,13 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
     await _updateTrack();
   }
 
+  void _toggleShuffle() {
+    setState(() => _isShuffled = !_isShuffled);
+    _audioFiles.shuffle();
+    log(_isShuffled.toString());
+    log('suffled : ${_audioFiles}');
+  }
+
   // ────────────────────────────────────────────────────────────────────────────
   // Helpers
   // ────────────────────────────────────────────────────────────────────────────
@@ -286,6 +329,38 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
     if (_audioFiles.length <= 1) return '—';
     final next = _audioFiles[(audioIndex + 1) % _audioFiles.length];
     return _stripExtension(next.split('/').last);
+  }
+
+  void _showSnack(String message) {
+    final MediaQueryData mediaQuery = MediaQuery.of(context);
+    // Calculate the height of the screen minus status bar and desired offset
+    final double topPadding = mediaQuery.padding.top + 20;
+    final double screenHeight = mediaQuery.size.height;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 1),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: const Color.fromARGB(
+          255,
+          214,
+          212,
+          212,
+        ).withOpacity(0.14),
+        elevation: 0,
+        // The bottom margin pushes the SnackBar to the top
+        margin: EdgeInsets.only(
+          bottom:
+              screenHeight -
+              topPadding -
+              100, // Adjust 100 based on SnackBar height
+          left: 16,
+          right: 16,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+    );
   }
 
   // ────────────────────────────────────────────────────────────────────────────
@@ -505,9 +580,15 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
                 ),
               ),
               _glassIconButton(
-                icon: Icons.favorite_border_rounded,
+                // Dynamic icon: solid if favorite, outlined if not
+                icon: _favoritePaths.contains(audioPath)
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_border_rounded,
                 size: 22.r,
-                onTap: () {},
+                // Make it red/pink if it is a favorite
+                active: _favoritePaths.contains(audioPath),
+                activeColor: Colors.pinkAccent,
+                onTap: _toggleFavorite, // Call your new function
               ),
             ],
           ),
@@ -969,7 +1050,9 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
           _glassIconButton(
             icon: Icons.shuffle_rounded,
             size: 22.r,
-            onTap: () {},
+            active: _isShuffled,
+            activeColor: const Color(0xFF52D7BF),
+            onTap: _toggleShuffle,
           ),
         ],
       ),

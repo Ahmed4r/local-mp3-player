@@ -2,7 +2,6 @@ import 'dart:developer';
 import 'dart:typed_data';
 import 'dart:io';
 import 'dart:ui';
-
 import 'package:audioplayer/screens/audioplayer_screen.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +23,7 @@ const _kAccent = Color(0xFF0fbcf9);
 const _kAccent2 = Color(0xFF52D7BF);
 const _kGlassWhite = Color(0x0DFFFFFF); // white @ 5%
 const _kBorderWhite = Color(0x1AFFFFFF); // white @ 10%
+const _KFavoriteRed = Color(0xFFE63946);
 
 class Homepage extends StatefulWidget {
   static const String routeName = '/homepage';
@@ -36,8 +36,10 @@ class Homepage extends StatefulWidget {
 class _HomepageState extends State<Homepage> with TickerProviderStateMixin {
   // ─── State ────────────────────────────────────────────────────────────────
   List<String> _audioFiles = [];
+  List<String> _allFiles = [];
   int? _currentIndex;
   PlayerState _playerState = PlayerState.stopped;
+  bool _showingFavorites = false;
 
   // ─── Metadata cache ───────────────────────────────────────────────────────
   // Key: file path → Value: album art bytes (null = no art / not yet loaded)
@@ -52,6 +54,7 @@ class _HomepageState extends State<Homepage> with TickerProviderStateMixin {
   // ─────────────────────────────────────────────────────────────────────────
   // Lifecycle
   // ─────────────────────────────────────────────────────────────────────────
+  bool _isGlobalPlaying = false;
 
   @override
   void initState() {
@@ -61,12 +64,18 @@ class _HomepageState extends State<Homepage> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    _fadeAnim = CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeOut,
-    );
+    _fadeAnim = CurvedAnimation(parent: _fadeController, curve: Curves.easeOut);
 
     _loadSavedFiles();
+    _loadFavorites();
+    // Listen to global player state changes
+    globalAudioPlayer.onPlayerStateChanged.listen((state) {
+      if (mounted) {
+        setState(() {
+          _isGlobalPlaying = state == PlayerState.playing;
+        });
+      }
+    });
   }
 
   @override
@@ -83,7 +92,8 @@ class _HomepageState extends State<Homepage> with TickerProviderStateMixin {
     final prefs = await SharedPreferences.getInstance();
 
     // Support migration: also check old key so existing users don't lose data
-    final raw = prefs.getStringList(_kPrefsKey) ??
+    final raw =
+        prefs.getStringList(_kPrefsKey) ??
         prefs.getStringList('mp3_files') ??
         [];
 
@@ -97,11 +107,43 @@ class _HomepageState extends State<Homepage> with TickerProviderStateMixin {
     if (mounted) {
       setState(() {
         _audioFiles = valid;
+        _allFiles = valid;
         _currentIndex = null;
         _playerState = PlayerState.stopped;
       });
       _fadeController.forward(from: 0);
       _prefetchArt(valid);
+    }
+  }
+
+  Future<void> _loadFavorites() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final favs = prefs.getStringList('favList') ?? [];
+
+    if (mounted) {
+      setState(() {
+        if (_showingFavorites) {
+          // Toggle OFF: Show all files
+          _audioFiles = _allFiles;
+          _showingFavorites = false;
+        } else {
+          // Toggle ON: Show only favorites
+          if (favs.isEmpty) {
+            _showSnack(
+              'No favorites yet. Tap the heart icon on a track to add it here!',
+            );
+            return;
+          }
+
+          // Filter _allFiles to only show ones safely stored in the favs list
+          _audioFiles = _allFiles.where((path) => favs.contains(path)).toList();
+          _showingFavorites = true;
+        }
+
+        // Reset player index state when switching lists
+        _currentIndex = null;
+        _playerState = PlayerState.stopped;
+      });
     }
   }
 
@@ -233,15 +275,17 @@ class _HomepageState extends State<Homepage> with TickerProviderStateMixin {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, false),
-                  child: Text('Cancel',
-                      style:
-                          TextStyle(color: Colors.white54, fontSize: 14.sp)),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.white54, fontSize: 14.sp),
+                  ),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, true),
-                  child: Text('Clear',
-                      style: TextStyle(
-                          color: Colors.redAccent, fontSize: 14.sp)),
+                  child: Text(
+                    'Clear',
+                    style: TextStyle(color: Colors.redAccent, fontSize: 14.sp),
+                  ),
                 ),
               ],
             ),
@@ -253,6 +297,82 @@ class _HomepageState extends State<Homepage> with TickerProviderStateMixin {
   // ─────────────────────────────────────────────────────────────────────────
   // Build
   // ─────────────────────────────────────────────────────────────────────────
+  // ─── Mini Player ──────────────────────────────────────────────────────────
+  Widget _buildMiniPlayer() {
+    // Only show if there's actually a song currently loaded in the player
+    if (globalAudioPlayer.source == null) return const SizedBox.shrink();
+
+    return ClipRRect(
+      borderRadius: BorderRadius.only(
+        topLeft: Radius.circular(24.r),
+        topRight: Radius.circular(24.r),
+      ),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+          decoration: BoxDecoration(
+            color: const Color(0xFF111111).withOpacity(0.85),
+            border: Border(
+              top: BorderSide(
+                color: Colors.white.withOpacity(0.15),
+                width: 1.2,
+              ),
+            ),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    _isGlobalPlaying
+                        ? 'Now Playing in Background...'
+                        : 'Paused',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                // Play/Pause Button
+                IconButton(
+                  icon: Icon(
+                    _isGlobalPlaying
+                        ? Icons.pause_rounded
+                        : Icons.play_arrow_rounded,
+                    color: _kAccent,
+                    size: 32.r,
+                  ),
+                  onPressed: () {
+                    _isGlobalPlaying
+                        ? globalAudioPlayer.pause()
+                        : globalAudioPlayer.resume();
+                  },
+                ),
+                // Close/Stop Session Button
+                IconButton(
+                  icon: Icon(
+                    Icons.close_rounded,
+                    color: Colors.white54,
+                    size: 28.r,
+                  ),
+                  onPressed: () async {
+                    await globalAudioPlayer.stop();
+                    await globalAudioPlayer.release(); // Clears the loaded path
+                    setState(() {}); // Hide mini player
+                  },
+                ),
+                SizedBox(width: 50.w),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -271,6 +391,8 @@ class _HomepageState extends State<Homepage> with TickerProviderStateMixin {
                   : _buildTrackList(),
             ),
           ),
+          // ADD THIS: The Mini Player anchored to the bottom
+          Align(alignment: Alignment.bottomCenter, child: _buildMiniPlayer()),
         ],
       ),
       floatingActionButton: _audioFiles.isNotEmpty ? _buildFab() : null,
@@ -293,8 +415,11 @@ class _HomepageState extends State<Homepage> with TickerProviderStateMixin {
           ? IconButton(
               tooltip: 'Clear Library',
               onPressed: _clearAllFiles,
-              icon: Icon(Icons.delete_sweep_rounded,
-                  color: Colors.white54, size: 22.r),
+              icon: Icon(
+                Icons.delete_sweep_rounded,
+                color: Colors.white54,
+                size: 22.r,
+              ),
             )
           : null,
       title: Column(
@@ -321,9 +446,15 @@ class _HomepageState extends State<Homepage> with TickerProviderStateMixin {
       centerTitle: true,
       actions: [
         IconButton(
-          tooltip: 'Add Files',
-          icon: Icon(Icons.add_rounded, color: _kAccent, size: 26.r),
-          onPressed: _pickFiles,
+          tooltip: _showingFavorites ? 'Show All' : 'Show Favorites',
+          icon: Icon(
+            _showingFavorites
+                ? Icons.favorite_rounded
+                : Icons.favorite_border_rounded,
+            color: Colors.white54,
+            size: 20.r,
+          ),
+          onPressed: _loadFavorites,
         ),
         SizedBox(width: 4.w),
       ],
@@ -346,17 +477,19 @@ class _HomepageState extends State<Homepage> with TickerProviderStateMixin {
         children: [
           _orb(top: -80, left: -60, size: 260, color: _kAccent, opacity: 0.06),
           _orb(
-              bottom: 120,
-              right: -80,
-              size: 220,
-              color: _kAccent2,
-              opacity: 0.05),
+            bottom: 120,
+            right: -80,
+            size: 220,
+            color: _kAccent2,
+            opacity: 0.05,
+          ),
           _orb(
-              top: 300,
-              left: 60,
-              size: 160,
-              color: const Color(0xFF1A1A1A),
-              opacity: 0.08),
+            top: 300,
+            left: 60,
+            size: 160,
+            color: const Color(0xFF1A1A1A),
+            opacity: 0.08,
+          ),
         ],
       ),
     );
@@ -408,8 +541,7 @@ class _HomepageState extends State<Homepage> with TickerProviderStateMixin {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: Colors.white.withOpacity(0.06),
-                    border:
-                        Border.all(color: _kBorderWhite, width: 1.2),
+                    border: Border.all(color: _kBorderWhite, width: 1.2),
                   ),
                   child: Icon(
                     Icons.library_music_rounded,
@@ -447,8 +579,10 @@ class _HomepageState extends State<Homepage> with TickerProviderStateMixin {
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                   child: Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 32.w, vertical: 14.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 32.w,
+                      vertical: 14.h,
+                    ),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(50.r),
                       gradient: LinearGradient(
@@ -465,7 +599,11 @@ class _HomepageState extends State<Homepage> with TickerProviderStateMixin {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.add_rounded, color: Colors.white, size: 20.r),
+                        Icon(
+                          Icons.add_rounded,
+                          color: Colors.white,
+                          size: 20.r,
+                        ),
                         SizedBox(width: 8.w),
                         Text(
                           'Add Music',
@@ -506,7 +644,11 @@ class _HomepageState extends State<Homepage> with TickerProviderStateMixin {
     // Read from cache — may be null if not yet fetched or no art
     final art = _artCache[path];
     final isCached = _artCache.containsKey(path);
-    final ext = p.extension(path).toLowerCase().replaceFirst('.', '').toUpperCase();
+    final ext = p
+        .extension(path)
+        .toLowerCase()
+        .replaceFirst('.', '')
+        .toUpperCase();
 
     return Padding(
       padding: EdgeInsets.only(bottom: 10.h),
@@ -532,14 +674,20 @@ class _HomepageState extends State<Homepage> with TickerProviderStateMixin {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Text('Remove',
-                      style: TextStyle(
-                          color: Colors.redAccent,
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w600)),
+                  Text(
+                    'Remove',
+                    style: TextStyle(
+                      color: Colors.redAccent,
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   SizedBox(width: 8.w),
-                  Icon(Icons.delete_rounded,
-                      color: Colors.redAccent, size: 22.r),
+                  Icon(
+                    Icons.delete_rounded,
+                    color: Colors.redAccent,
+                    size: 22.r,
+                  ),
                 ],
               ),
             ),
@@ -557,9 +705,7 @@ class _HomepageState extends State<Homepage> with TickerProviderStateMixin {
                 curve: Curves.easeOut,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20.r),
-                  color: isSelected
-                      ? _kAccent.withOpacity(0.12)
-                      : _kGlassWhite,
+                  color: isSelected ? _kAccent.withOpacity(0.12) : _kGlassWhite,
                   border: Border.all(
                     color: isSelected
                         ? _kAccent.withOpacity(0.5)
@@ -569,7 +715,9 @@ class _HomepageState extends State<Homepage> with TickerProviderStateMixin {
                 ),
                 child: Padding(
                   padding: EdgeInsets.symmetric(
-                      horizontal: 14.w, vertical: 12.h),
+                    horizontal: 14.w,
+                    vertical: 12.h,
+                  ),
                   child: Row(
                     children: [
                       // Album art / placeholder
@@ -599,13 +747,18 @@ class _HomepageState extends State<Homepage> with TickerProviderStateMixin {
                                 if (isSelected)
                                   Row(
                                     children: [
-                                      Icon(Icons.equalizer_rounded,
-                                          color: _kAccent, size: 14.r),
+                                      Icon(
+                                        Icons.equalizer_rounded,
+                                        color: _kAccent,
+                                        size: 14.r,
+                                      ),
                                       SizedBox(width: 4.w),
                                       Text(
                                         'Now playing',
                                         style: TextStyle(
-                                            color: _kAccent, fontSize: 11.sp),
+                                          color: _kAccent,
+                                          fontSize: 11.sp,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -619,9 +772,7 @@ class _HomepageState extends State<Homepage> with TickerProviderStateMixin {
                         isSelected
                             ? Icons.play_circle_fill_rounded
                             : Icons.chevron_right_rounded,
-                        color: isSelected
-                            ? _kAccent
-                            : Colors.white24,
+                        color: isSelected ? _kAccent : Colors.white24,
                         size: isSelected ? 26.r : 20.r,
                       ),
                     ],
@@ -646,25 +797,31 @@ class _HomepageState extends State<Homepage> with TickerProviderStateMixin {
             ? Image.memory(art, fit: BoxFit.cover)
             // Placeholder — either loading skeleton or default icon
             : !isCached
-                ? Container(
-                    color: Colors.white.withOpacity(0.06),
-                    child: Icon(Icons.music_note_rounded,
-                        color: Colors.white12, size: 24.r),
-                  )
-                : Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          _kAccent.withOpacity(0.25),
-                          _kAccent2.withOpacity(0.25),
-                        ],
-                      ),
-                    ),
-                    child: Icon(Icons.music_note_rounded,
-                        color: _kAccent.withOpacity(0.6), size: 26.r),
+            ? Container(
+                color: Colors.white.withOpacity(0.06),
+                child: Icon(
+                  Icons.music_note_rounded,
+                  color: Colors.white12,
+                  size: 24.r,
+                ),
+              )
+            : Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      _kAccent.withOpacity(0.25),
+                      _kAccent2.withOpacity(0.25),
+                    ],
                   ),
+                ),
+                child: Icon(
+                  Icons.music_note_rounded,
+                  color: _kAccent.withOpacity(0.6),
+                  size: 26.r,
+                ),
+              ),
       ),
     );
   }
