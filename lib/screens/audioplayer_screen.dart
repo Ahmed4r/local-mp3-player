@@ -5,14 +5,91 @@ import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_media_metadata/flutter_media_metadata.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:palette_generator/palette_generator.dart';
+import 'package:video_player/video_player.dart';
 
 final AudioPlayer globalAudioPlayer = AudioPlayer();
+
+// ─── iOS 26 Liquid Glass helper ─────────────────────────────────────────────
+// Uses a stronger blur + subtle white border to mimic the new visionOS-inspired
+// "Liquid Glass" material introduced in iOS 26.
+bool get _isIOS => Platform.isIOS;
+
+class _LiquidGlass extends StatelessWidget {
+  const _LiquidGlass({
+    required this.child,
+    this.padding,
+    this.borderRadius,
+    this.blurSigma,
+    this.fillOpacity,
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+  final BorderRadiusGeometry? borderRadius;
+  final double? blurSigma;
+  final double? fillOpacity;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = borderRadius ?? BorderRadius.circular(28.r);
+    // iOS 26 glass is more transparent and has a stronger blur than the
+    // traditional frosted glass style.
+    final sigma = blurSigma ?? (_isIOS ? 40.0 : 24.0);
+    final fill = fillOpacity ?? (_isIOS ? 0.12 : 0.18);
+
+    return ClipRRect(
+      borderRadius: radius as BorderRadius,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
+        child: Container(
+          padding: padding ?? EdgeInsets.all(18.r),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(fill),
+            borderRadius: radius,
+            border: Border.all(
+              color: Colors.white.withOpacity(_isIOS ? 0.28 : 0.18),
+              width: _isIOS ? 1.0 : 1.5,
+            ),
+            // Subtle inner highlight — the iOS 26 "specular edge" effect
+            gradient: _isIOS
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withOpacity(0.22),
+                      Colors.white.withOpacity(0.06),
+                    ],
+                  )
+                : null,
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Ambient Video Option ────────────────────────────────────────────────────
+// Each option represents a looping background video. Only one can be active.
+// Videos should be placed in assets/videos/ and registered in pubspec.yaml.
+class _AmbientVideo {
+  final IconData icon;
+  final String label;
+  final String assetPath; // e.g. 'assets/videos/rain.mp4'
+
+  const _AmbientVideo({
+    required this.icon,
+    required this.label,
+    required this.assetPath,
+  });
+}
 
 class AudioplayerScreen extends StatefulWidget {
   static const String routeName = 'player';
@@ -24,18 +101,16 @@ class AudioplayerScreen extends StatefulWidget {
 
 class _AudioplayerScreenState extends State<AudioplayerScreen>
     with TickerProviderStateMixin {
-  // pref
+  // ─── Favorites ───────────────────────────────────────────────────────────
   List<String> _favoritePaths = [];
-  bool isFav = false;
 
-  Future<void> SaveFavorites() async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
+  Future<void> _saveFavorites() async {
+    final pref = await SharedPreferences.getInstance();
     pref.setStringList('favList', _favoritePaths);
   }
 
-  Future<void> LoadFavorites() async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    // Make sure the key matches what you used in audioplayer_screen ('favList')
+  Future<void> _loadFavorites() async {
+    final pref = await SharedPreferences.getInstance();
     _favoritePaths = pref.getStringList('favList') ?? [];
   }
 
@@ -49,146 +124,170 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
         _showSnack('Added to favorites');
       }
     });
-    SaveFavorites();
+    _saveFavorites();
   }
 
-  // ─── Audio Engine ────────────────────────────────────────────────────────────
+  // ─── Audio Engine ─────────────────────────────────────────────────────────
   late final AudioPlayer _audioPlayer;
   late StreamSubscription<PlayerState> _playerStateSub;
   late StreamSubscription<Duration> _durationSub;
   late StreamSubscription<Duration> _positionSub;
   late StreamSubscription<void> _completionSub;
 
-  // ─── Playlist State ──────────────────────────────────────────────────────────
-  // Holds paths for ALL supported formats: .mp3 .m4a .wav .flac .aac
+  // ─── Playlist State ───────────────────────────────────────────────────────
   List<String> _audioFiles = [];
-  List<String> _allFiles = []; // <-- Add this line
-  bool _showingFavorites = false; // <-- Add this
   late String audioPath;
   late String audioTitle;
   int audioIndex = 0;
 
-  // ─── Playback State ──────────────────────────────────────────────────────────
+  // ─── Playback State ───────────────────────────────────────────────────────
   Duration _currentPosition = Duration.zero;
   Duration _totalDuration = Duration.zero;
   bool _isPlaying = false;
   bool _isLooping = false;
   bool _isShuffled = false;
+  double _currentVolume = 1.0;
 
-  // ─── Metadata ────────────────────────────────────────────────────────────────
+  // ─── Metadata ─────────────────────────────────────────────────────────────
   Uint8List? _albumImageBytes;
   String? _artistName;
-  String? _albumName;
 
-  // ADD THIS for Theme Extraction
-  Color _themeColor1 = const Color(0xFF0fbcf9);
-  Color _themeColor2 = const Color(0xFF52D7BF);
+  // ─── Theme Colors ─────────────────────────────────────────────────────────
+  Color _themeColor1 = const Color(0xFF3d7a8a);
+  Color _themeColor2 = const Color(0xFF2a5a6a);
 
-  // ─── Init Guard ──────────────────────────────────────────────────────────────
-  // Prevents re-initialisation on every UI rebuild triggered by
-  // keyboard appearance, orientation change, etc.
+  // ─── Init Guard ───────────────────────────────────────────────────────────
   bool _isFirstLoad = true;
 
-  // ─── Album Art Animation ─────────────────────────────────────────────────────
+  // ─── Animations ───────────────────────────────────────────────────────────
   late final AnimationController _artController;
-  late final Animation<double> _artScale;
+  late final AnimationController _playlistController;
+  late final AnimationController _ambientController;
+  late final Animation<double> _ambientFade;
+  late final Animation<Offset> _ambientSlide;
 
-  // ─── Seek-drag state ─────────────────────────────────────────────────────────
+  // ─── Seek-drag ────────────────────────────────────────────────────────────
   bool _isSeeking = false;
   double _seekValue = 0;
 
-  // ─── Playlist Overlay ────────────────────────────────────────────────────────
+  // ─── Overlay flags ────────────────────────────────────────────────────────
   bool _playlistOpen = false;
-  late final AnimationController _playlistController;
-  late final Animation<double> _playlistScale;
-  late final Animation<double> _playlistFade;
-  late final Animation<double> _playlistBlur;
+  bool _ambientOpen = false;
+  bool _isVolumeExpanded = false;
 
-  // ────────────────────────────────────────────────────────────────────────────
-  // Lifecycle
-  // ────────────────────────────────────────────────────────────────────────────
+  // ─── Speed ────────────────────────────────────────────────────────────────
+  double _playbackSpeed = 1.0;
+  final List<double> _speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+
+  // ─── Ambient video options (radio — only one active at a time) ───────────
+  static const List<_AmbientVideo> _ambientVideos = [
+    _AmbientVideo(
+      icon: Icons.water_drop_outlined,
+      label: 'Rain',
+      assetPath: 'assets/video/rain.mp4',
+    ),
+    _AmbientVideo(
+      icon: Icons.air_rounded,
+      label: 'Wind',
+      assetPath: 'assets/video/wind.mp4',
+    ),
+    _AmbientVideo(
+      icon: Icons.water_rounded,
+      label: 'Ocean',
+      assetPath: 'assets/video/ocean.mp4',
+    ),
+    _AmbientVideo(
+      icon: Icons.forest_rounded,
+      label: 'Forest',
+      assetPath: 'assets/video/forest.mp4',
+    ),
+    _AmbientVideo(
+      icon: Icons.fireplace_rounded,
+      label: 'Fire',
+      assetPath: 'assets/video/fire.mp4',
+    ),
+    _AmbientVideo(
+      icon: Icons.nights_stay_rounded,
+      label: 'Night',
+      assetPath: 'assets/video/night.mp4',
+    ),
+  ];
+
+  /// Index into [_ambientVideos] of the currently playing video, or -1 = none.
+  int _selectedAmbientIndex = -1;
+
+  // video_player controller — null when no ambient video is active
+  VideoPlayerController? _videoController;
+
+  // ─── Lifecycle ────────────────────────────────────────────────────────────
 
   @override
   void initState() {
     super.initState();
-
-    // FIX: Use the global player instead of creating a new one
     _audioPlayer = globalAudioPlayer;
-
     _audioPlayer.setReleaseMode(ReleaseMode.stop);
 
     _playerStateSub = _audioPlayer.onPlayerStateChanged.listen((state) {
       if (mounted) setState(() => _isPlaying = state == PlayerState.playing);
     });
-
     _durationSub = _audioPlayer.onDurationChanged.listen((d) {
       if (mounted) setState(() => _totalDuration = d);
     });
-
     _positionSub = _audioPlayer.onPositionChanged.listen((p) {
       if (mounted && !_isSeeking) setState(() => _currentPosition = p);
     });
-
     _completionSub = _audioPlayer.onPlayerComplete.listen((_) {
       if (!_isLooping) _playNext();
     });
 
-    // Album-art pulse animation
     _artController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    _artScale = Tween<double>(begin: 0.92, end: 1.0).animate(
-      CurvedAnimation(parent: _artController, curve: Curves.easeOutBack),
-    );
 
-    // Playlist overlay — smooth "explosion" open/close
     _playlistController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 420),
     );
-    _playlistScale = Tween<double>(begin: 0.82, end: 1.0).animate(
-      CurvedAnimation(parent: _playlistController, curve: Curves.easeOutExpo),
+
+    _ambientController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 380),
     );
-    _playlistFade = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _playlistController,
-        curve: const Interval(0.0, 0.7, curve: Curves.easeOut),
-      ),
+    _ambientFade = CurvedAnimation(
+      parent: _ambientController,
+      curve: Curves.easeOut,
     );
-    _playlistBlur = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _playlistController, curve: Curves.easeOut),
-    );
-    LoadFavorites();
+    _ambientSlide = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _ambientController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
+
+    _loadFavorites();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
-    // FIX 2 ▸ Guard so this runs ONLY on the very first build,
-    //          not on every subsequent rebuild.
     if (_isFirstLoad) {
       _isFirstLoad = false;
-
       final args =
           ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-
-      // Accept any list of audio file paths regardless of extension.
       _audioFiles = List<String>.from(args['audioList'] ?? []);
       audioPath = args['audioPath'] as String;
       audioTitle = args['audioTitle'] as String;
       audioIndex = (args['audioIndex'] as int?) ?? 0;
 
-      // Safety: if the provided path isn't in the list, fall back to first.
       if (_audioFiles.isNotEmpty && !_audioFiles.contains(audioPath)) {
         audioPath = _audioFiles.first;
         audioTitle = _stripExtension(audioPath.split('/').last);
         audioIndex = 0;
       }
-
       _initAudio();
-      LoadFavorites().then((_) {
+      _loadFavorites().then((_) {
         if (mounted) setState(() {});
       });
     }
@@ -200,15 +299,14 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
     _durationSub.cancel();
     _positionSub.cancel();
     _completionSub.cancel();
-    // _audioPlayer.dispose();
     _artController.dispose();
     _playlistController.dispose();
+    _ambientController.dispose();
+    _videoController?.dispose();
     super.dispose();
   }
 
-  // ────────────────────────────────────────────────────────────────────────────
-  // Audio Control
-  // ────────────────────────────────────────────────────────────────────────────
+  // ─── Audio Control ────────────────────────────────────────────────────────
 
   Future<void> _initAudio() async {
     await _audioPlayer.setSource(DeviceFileSource(audioPath));
@@ -222,10 +320,8 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
       setState(() {
         _albumImageBytes = null;
         _artistName = null;
-        _albumName = null;
-        // Reset to default colors when changing tracks
-        _themeColor1 = const Color(0xFF0fbcf9);
-        _themeColor2 = const Color(0xFF52D7BF);
+        _themeColor1 = const Color(0xFF3d7a8a);
+        _themeColor2 = const Color(0xFF2a5a6a);
       });
     }
     try {
@@ -234,13 +330,8 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
         setState(() {
           _albumImageBytes = metadata.albumArt;
           _artistName = metadata.albumArtistName;
-          _albumName = metadata.albumName;
         });
-
-        // ADD THIS: Extract colors if art exists
-        if (_albumImageBytes != null) {
-          _extractThemeColors(_albumImageBytes!);
-        }
+        if (_albumImageBytes != null) _extractThemeColors(_albumImageBytes!);
       }
     } catch (e) {
       log('Metadata error: $e');
@@ -248,28 +339,19 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
   }
 
   Future<void> _extractThemeColors(Uint8List imageBytes) async {
-    final imageProvider = MemoryImage(imageBytes);
-    final palette = await PaletteGenerator.fromImageProvider(imageProvider);
-
+    final palette = await PaletteGenerator.fromImageProvider(
+      MemoryImage(imageBytes),
+    );
     if (mounted) {
       setState(() {
-        // Try to get vibrant colors, fallback to dominant, fallback to default
-        _themeColor1 =
-            palette.dominantColor?.color ??
-            palette.lightVibrantColor?.color ??
-            const Color(0xFF0fbcf9);
-
-        _themeColor2 =
-            palette.vibrantColor?.color ??
-            palette.darkVibrantColor?.color ??
-            const Color(0xFF52D7BF);
+        _themeColor1 = palette.dominantColor?.color ?? const Color(0xFF3d7a8a);
+        _themeColor2 = palette.vibrantColor?.color ?? const Color(0xFF2a5a6a);
       });
     }
   }
 
-  void _playPause() {
-    _isPlaying ? _audioPlayer.pause() : _audioPlayer.resume();
-  }
+  void _playPause() =>
+      _isPlaying ? _audioPlayer.pause() : _audioPlayer.resume();
 
   Future<void> _playNext() async {
     if (_audioFiles.isEmpty) return;
@@ -279,7 +361,6 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
 
   Future<void> _playPrevious() async {
     if (_audioFiles.isEmpty) return;
-    // If more than 3 s into the track, restart instead of going back.
     if (_currentPosition.inSeconds > 3) {
       await _audioPlayer.seek(Duration.zero);
       return;
@@ -290,7 +371,6 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
 
   Future<void> _updateTrack() async {
     audioPath = _audioFiles[audioIndex];
-    // Strip full extension regardless of format (.mp3, .m4a, .flac, etc.)
     audioTitle = _stripExtension(audioPath.split('/').last);
     if (mounted) setState(() {});
     await _initAudio();
@@ -301,6 +381,23 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
     _audioPlayer.setReleaseMode(
       _isLooping ? ReleaseMode.loop : ReleaseMode.stop,
     );
+  }
+
+  void _toggleShuffle() {
+    setState(() => _isShuffled = !_isShuffled);
+    if (_isShuffled) _audioFiles.shuffle();
+  }
+
+  void _onVolumeChanged(double v) {
+    setState(() => _currentVolume = v);
+    _audioPlayer.setVolume(v);
+  }
+
+  void _cycleSpeed() {
+    final idx = _speeds.indexOf(_playbackSpeed);
+    final next = _speeds[(idx + 1) % _speeds.length];
+    setState(() => _playbackSpeed = next);
+    _audioPlayer.setPlaybackRate(next);
   }
 
   void _openPlaylist() {
@@ -320,24 +417,73 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
     await _updateTrack();
   }
 
-  void _toggleShuffle() {
-    setState(() => _isShuffled = !_isShuffled);
-    _audioFiles.shuffle();
-    log(_isShuffled.toString());
-    log('suffled : ${_audioFiles}');
+  void _toggleAmbient() {
+    setState(() => _ambientOpen = !_ambientOpen);
+    if (_ambientOpen) {
+      _ambientController.forward(from: 0);
+    } else {
+      _ambientController.reverse();
+    }
   }
 
-  // ────────────────────────────────────────────────────────────────────────────
-  // Helpers
-  // ────────────────────────────────────────────────────────────────────────────
+  /// Selects ambient video at [index]. Tapping the already-active index stops it.
+  Future<void> _selectAmbientVideo(int index) async {
+    // Tapping the active one → stop & deselect
+    if (_selectedAmbientIndex == index) {
+      await _videoController?.pause();
+      await _videoController?.dispose();
+      setState(() {
+        _videoController = null;
+        _selectedAmbientIndex = -1;
+      });
+      return;
+    }
+
+    // Dispose any previous controller
+    await _videoController?.pause();
+    await _videoController?.dispose();
+    setState(() {
+      _videoController = null;
+      _selectedAmbientIndex = -1;
+    });
+
+    try {
+      final video = _ambientVideos[index];
+      final ctrl = VideoPlayerController.asset(
+        video.assetPath,
+        videoPlayerOptions: VideoPlayerOptions(
+          // Prevents ExoPlayer from requesting audio focus,
+          // so the audioplayers engine (Quran audio) keeps playing uninterrupted.
+          mixWithOthers: true,
+        ),
+      );
+      await ctrl.initialize();
+      ctrl.setLooping(true);
+      await ctrl.setVolume(0.0); // video is visual only — muted
+      ctrl.play();
+
+      if (mounted) {
+        setState(() {
+          _videoController = ctrl;
+          _selectedAmbientIndex = index;
+        });
+      }
+    } catch (e) {
+      log('Ambient video error: $e');
+      // Show a brief snack so the user knows the file is missing
+      if (mounted) {
+        _showSnack('Video not found — add ${_ambientVideos[index].assetPath}');
+      }
+    }
+  }
+
+  // ─── Helpers ──────────────────────────────────────────────────────────────
 
   String _fmt(Duration d) {
     String two(int n) => n.toString().padLeft(2, '0');
     return '${two(d.inMinutes)}:${two(d.inSeconds.remainder(60))}';
   }
 
-  /// Strips the file extension from a filename regardless of format.
-  /// e.g. "track.m4a" → "track", "song.flac" → "song"
   String _stripExtension(String filename) {
     const supported = {
       '.mp3',
@@ -353,41 +499,21 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
         return filename.substring(0, filename.length - ext.length);
       }
     }
-    // Fallback: strip anything after the last dot
     final dot = filename.lastIndexOf('.');
     return dot != -1 ? filename.substring(0, dot) : filename;
   }
 
-  String get _upNextTitle {
-    if (_audioFiles.length <= 1) return '—';
-    final next = _audioFiles[(audioIndex + 1) % _audioFiles.length];
-    return _stripExtension(next.split('/').last);
-  }
-
   void _showSnack(String message) {
-    final MediaQueryData mediaQuery = MediaQuery.of(context);
-    // Calculate the height of the screen minus status bar and desired offset
-    final double topPadding = mediaQuery.padding.top + 20;
-    final double screenHeight = mediaQuery.size.height;
-
+    final mq = MediaQuery.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
         duration: const Duration(seconds: 1),
         behavior: SnackBarBehavior.floating,
-        backgroundColor: const Color.fromARGB(
-          255,
-          214,
-          212,
-          212,
-        ).withOpacity(0.14),
+        backgroundColor: Colors.white.withOpacity(0.12),
         elevation: 0,
-        // The bottom margin pushes the SnackBar to the top
         margin: EdgeInsets.only(
-          bottom:
-              screenHeight -
-              topPadding -
-              100, // Adjust 100 based on SnackBar height
+          bottom: mq.size.height - mq.padding.top - 120,
           left: 16,
           right: 16,
         ),
@@ -396,190 +522,136 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
     );
   }
 
-  // ────────────────────────────────────────────────────────────────────────────
-  // Build
-  // ────────────────────────────────────────────────────────────────────────────
+  // ─── Build ────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
+    final double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       extendBodyBehindAppBar: true,
-      backgroundColor: Colors.transparent,
-      appBar: _buildAppBar(),
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(
+            Icons.keyboard_arrow_down_rounded,
+            size: 32.r,
+            color: Colors.white,
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: Stack(
         children: [
-          _buildBackground(),
+          // ── Ambient video background (plays behind everything) ─────────────
+          if (_videoController != null && _videoController!.value.isInitialized)
+            Positioned.fill(
+              child: FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width: _videoController!.value.size.width,
+                  height: _videoController!.value.size.height,
+                  child: VideoPlayer(_videoController!),
+                ),
+              ),
+            ),
+
+          // ── Background gradient derived from album art colors ──────────────
+          Positioned.fill(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeInOut,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    (_videoController != null ? Colors.black : _themeColor1)
+                        .withOpacity(_videoController != null ? 0.35 : 0.55),
+                    (_videoController != null ? Colors.black : _themeColor2)
+                        .withOpacity(_videoController != null ? 0.25 : 0.35),
+                    Colors.black,
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: const [0.0, 0.45, 1.0],
+                ),
+              ),
+            ),
+          ),
+
+          // ── Main content ──────────────────────────────────────────────────
           SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.symmetric(horizontal: 22.w, vertical: 12.h),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
               child: Column(
                 children: [
-                  SizedBox(height: 8.h),
-                  _buildAlbumArtCard(),
+                  const Spacer(),
+
+                  // Album art
+                  // _buildAlbumArt(),
+
                   SizedBox(height: 20.h),
-                  _buildSeekCard(),
+
+                  // Ambient video row — slides in above player card when open
+                  _buildAmbientRow(),
+
+                  // Main player card (matches the bottom card in the image)
+                  _buildMainPlayerCard(),
+
+                  SizedBox(height: 10.h),
+
+                  // Sound settings expandable
+                  _buildExpandableVolume(),
+
                   SizedBox(height: 16.h),
-                  _buildUpNextCard(),
-                  SizedBox(height: 16.h),
-                  _buildControlsCard(),
-                  SizedBox(height: 20.h),
                 ],
               ),
             ),
           ),
-          // ── Playlist Overlay (explodes open on long-press) ────────────────
-          if (_playlistOpen) _buildPlaylistOverlay(),
+
+          // ── Playlist overlay ──────────────────────────────────────────────
+          if (_playlistOpen) _buildPlaylistOverlay(screenHeight),
         ],
       ),
     );
   }
 
-  // ─── App Bar ─────────────────────────────────────────────────────────────────
+  // ─── Album Art ────────────────────────────────────────────────────────────
 
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      centerTitle: true,
-      leading: IconButton(
-        icon: Icon(
-          Icons.keyboard_arrow_down_rounded,
-          color: Colors.white,
-          size: 32.r,
-        ),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-      title: Column(
-        children: [
-          Text(
-            'NOW PLAYING',
-            style: GoogleFonts.bakbakOne(
-              color: Colors.white60,
-              fontSize: 11.sp,
-              letterSpacing: 3,
+  Widget _buildAlbumArt() {
+    final size = MediaQuery.of(context).size.width * 0.82;
+    Widget art = _albumImageBytes != null
+        ? Image.memory(
+            _albumImageBytes!,
+            width: size,
+            height: size * 0.75,
+            fit: BoxFit.cover,
+          )
+        : Container(
+            width: size,
+            height: size * 0.75,
+            color: Colors.white10,
+            child: Icon(
+              Icons.music_note_rounded,
+              size: 72.r,
+              color: Colors.white24,
             ),
-          ),
-          if (_albumName != null)
-            Text(
-              _albumName!,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 13.sp,
-                fontWeight: FontWeight.w600,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-        ],
-      ),
-      actions: [
-        IconButton(
-          icon: Icon(
-            Icons.more_vert_rounded,
-            color: Colors.white70,
-            size: 24.r,
-          ),
-          onPressed: () {},
-        ),
-      ],
-    );
+          );
+
+    return ClipRRect(borderRadius: BorderRadius.circular(20.r), child: art);
   }
 
-  // ─── Background ──────────────────────────────────────────────────────────────
+  // ─── Main Player Card (the glassy card at bottom of image) ───────────────
 
-  Widget _buildBackground() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF000000), // pure black
-            Color(0xFF0A0A0A), // near-black
-            Color(0xFF111111), // dark charcoal
-            Color(0xFF000000), // pure black
-          ],
-          stops: [0.0, 0.35, 0.70, 1.0],
-        ),
-      ),
-      child: Stack(
-        children: [
-          // Soft bokeh orbs for depth
-          _orb(
-            top: -60,
-            left: -60,
-            size: 220,
-            color: _themeColor1, // <-- Changed
-            opacity:
-                0.15, // <-- Bumped opacity to 0.15 to make it more visible!
-          ),
-          _orb(
-            top: 180,
-            right: -80,
-            size: 200,
-            color: _themeColor2, // <-- Changed
-            opacity: 0.15, // <-- Bumped opacity
-          ),
-          _orb(
-            bottom: 100,
-            left: 40,
-            size: 160,
-            color: const Color(0xFF1A1A1A),
-            opacity: 0.80,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _orb({
-    double? top,
-    double? bottom,
-    double? left,
-    double? right,
-    required double size,
-    required Color color,
-    required double opacity,
-  }) {
-    return Positioned(
-      top: top,
-      bottom: bottom,
-      left: left,
-      right: right,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: color.withOpacity(opacity),
-        ),
-      ),
-    );
-  }
-
-  // ─── Album Art Card ───────────────────────────────────────────────────────────
-
-  Widget _buildAlbumArtCard() {
-    return _glass(
+  Widget _buildMainPlayerCard() {
+    return _LiquidGlass(
+      padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 16.h),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ScaleTransition(
-            scale: _artScale,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20.r),
-              child: _albumImageBytes != null
-                  ? Image.memory(
-                      _albumImageBytes!,
-                      height: 280.h,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    )
-                  : _defaultArt(),
-            ),
-          ),
-          SizedBox(height: 18.h),
+          // Title row
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
                 child: Column(
@@ -589,40 +661,181 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
                       audioTitle.contains('.')
                           ? _stripExtension(audioTitle)
                           : audioTitle,
+                      style: GoogleFonts.inter(
+                        color: Colors.white,
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.3,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 20.sp,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.3,
-                      ),
                     ),
                     if (_artistName != null) ...[
                       SizedBox(height: 3.h),
                       Text(
                         _artistName!,
+                        style: GoogleFonts.inter(
+                          color: Colors.white70,
+                          fontSize: 13.sp,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: Colors.white54,
-                          fontSize: 14.sp,
-                        ),
                       ),
                     ],
                   ],
                 ),
               ),
-              _glassIconButton(
-                // Dynamic icon: solid if favorite, outlined if not
-                icon: _favoritePaths.contains(audioPath)
-                    ? Icons.favorite_rounded
-                    : Icons.favorite_border_rounded,
-                size: 22.r,
-                // Make it red/pink if it is a favorite
-                active: _favoritePaths.contains(audioPath),
-                activeColor: Colors.pinkAccent,
-                onTap: _toggleFavorite, // Call your new function
+              // ··· menu icon (three-dots, matching image)
+              GestureDetector(
+                onTap: _toggleFavorite,
+                child: Container(
+                  width: 36.r,
+                  height: 36.r,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.12),
+                    border: Border.all(color: Colors.white.withOpacity(0.2)),
+                  ),
+                  child: Icon(
+                    _favoritePaths.contains(audioPath)
+                        ? Icons.favorite_rounded
+                        : Icons.more_horiz_rounded,
+                    color: Colors.white,
+                    size: 20.r,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          SizedBox(height: 18.h),
+
+          // Seek bar
+          _buildSeekBar(),
+
+          SizedBox(height: 20.h),
+
+          // Controls row: speed | prev | play | next | sleep
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Speed (1× in image)
+              GestureDetector(
+                onTap: _cycleSpeed,
+                child: Text(
+                  '${_playbackSpeed == _playbackSpeed.truncateToDouble() ? _playbackSpeed.toInt() : _playbackSpeed}×',
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+
+              // Rewind
+              GestureDetector(
+                onTap: _playPrevious,
+                child: Icon(
+                  Icons.fast_rewind_rounded,
+                  color: Colors.white,
+                  size: 30.r,
+                ),
+              ),
+
+              // Play / Pause (large, central)
+              GestureDetector(
+                onTap: _playPause,
+                child: Icon(
+                  _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                  color: Colors.white,
+                  size: 52.r,
+                ),
+              ),
+
+              // Fast forward
+              GestureDetector(
+                onTap: _playNext,
+                child: Icon(
+                  Icons.fast_forward_rounded,
+                  color: Colors.white,
+                  size: 30.r,
+                ),
+              ),
+
+              // Sleep / loop (moon-z icon in image)
+              GestureDetector(
+                onTap: _toggleLoop,
+                child: Icon(
+                  _isLooping ? Icons.repeat_one_rounded : Icons.bedtime_rounded,
+                  color: _isLooping ? Colors.white : Colors.white70,
+                  size: 22.r,
+                ),
+              ),
+            ],
+          ),
+
+          SizedBox(height: 20.h),
+
+          // Bottom row: ambient (rain icon) | playlist
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Rain / ambient icon (left side, matches image)
+              GestureDetector(
+                onTap: _toggleAmbient,
+                child: Container(
+                  width: 40.r,
+                  height: 40.r,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _ambientOpen
+                        ? Colors.white.withOpacity(0.22)
+                        : Colors.white.withOpacity(0.10),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(_ambientOpen ? 0.4 : 0.2),
+                    ),
+                  ),
+                  child: Center(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Icon(
+                          Icons.cloud_rounded,
+                          color: Colors.white,
+                          size: 18.r,
+                        ),
+                        Positioned(
+                          bottom: 8.r,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: List.generate(
+                              3,
+                              (i) => Container(
+                                margin: EdgeInsets.symmetric(horizontal: 1.r),
+                                width: 2.r,
+                                height: 5.r + (i == 1 ? 2.r : 0),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(1.r),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // Playlist icon (right side)
+              GestureDetector(
+                onTap: _openPlaylist,
+                child: Icon(
+                  Icons.format_list_bulleted_rounded,
+                  color: Colors.white70,
+                  size: 22.r,
+                ),
               ),
             ],
           ),
@@ -631,525 +844,337 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
     );
   }
 
-  Widget _defaultArt() {
-    return Container(
-      height: 280.h,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20.r),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1A1A1A), Color(0xFF0D0D0D)],
-        ),
-      ),
-      child: Icon(
-        Icons.music_note_rounded,
-        size: 100.r,
-        color: Colors.white.withOpacity(0.3),
-      ),
-    );
-  }
+  // ─── Seek Bar ─────────────────────────────────────────────────────────────
 
-  // ─── Seek Bar Card ────────────────────────────────────────────────────────────
-
-  Widget _buildSeekCard() {
+  Widget _buildSeekBar() {
     final maxMs = _totalDuration.inMilliseconds > 0
         ? _totalDuration.inMilliseconds.toDouble()
         : 1.0;
-    final currentMs = _isSeeking
+    final curMs = _isSeeking
         ? _seekValue
-        : _currentPosition.inMilliseconds
-              .clamp(0, _totalDuration.inMilliseconds)
-              .toDouble();
+        : _currentPosition.inMilliseconds.toDouble();
+    final rem = _totalDuration - _currentPosition;
 
-    return _glass(
-      padding: EdgeInsets.fromLTRB(16.w, 14.h, 16.w, 10.h),
-      child: Column(
-        children: [
-          SliderTheme(
-            data: SliderThemeData(
-              trackHeight: 3.h,
-              thumbShape: RoundSliderThumbShape(enabledThumbRadius: 6.r),
-              overlayShape: RoundSliderOverlayShape(overlayRadius: 14.r),
-              activeTrackColor: _themeColor1, // <-- Changed
-              inactiveTrackColor: Colors.white12,
-              thumbColor: Colors.white,
-              overlayColor: _themeColor1.withOpacity(0.2), // <-- Changed
-            ),
-            child: Slider(
-              min: 0,
-              max: maxMs,
-              value: currentMs,
-              onChangeStart: (v) {
-                _isSeeking = true;
-                _seekValue = v;
-              },
-              onChanged: (v) => setState(() => _seekValue = v),
-              onChangeEnd: (v) {
-                _isSeeking = false;
-                _audioPlayer.seek(Duration(milliseconds: v.toInt()));
-              },
-            ),
+    return Column(
+      children: [
+        SliderTheme(
+          data: SliderThemeData(
+            trackHeight: 4.h,
+            thumbShape: RoundSliderThumbShape(enabledThumbRadius: 7.r),
+            overlayShape: RoundSliderOverlayShape(overlayRadius: 18.r),
+            activeTrackColor: Colors.white,
+            inactiveTrackColor: Colors.white.withOpacity(0.25),
+            thumbColor: Colors.white,
           ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 6.w),
-            child: Row(
+          child: Slider(
+            min: 0,
+            max: maxMs,
+            value: curMs.clamp(0.0, maxMs),
+            onChangeStart: (_) => setState(() => _isSeeking = true),
+            onChanged: (v) => setState(() => _seekValue = v),
+            onChangeEnd: (v) {
+              setState(() => _isSeeking = false);
+              _audioPlayer.seek(Duration(milliseconds: v.toInt()));
+            },
+          ),
+        ),
+        SizedBox(height: 2.h),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              _fmt(_currentPosition),
+              style: GoogleFonts.inter(
+                color: Colors.white70,
+                fontSize: 11.sp,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Text(
+              '-${_fmt(rem)}',
+              style: GoogleFonts.inter(
+                color: Colors.white70,
+                fontSize: 11.sp,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // ─── Expandable Sound Settings ────────────────────────────────────────────
+
+  Widget _buildExpandableVolume() {
+    return GestureDetector(
+      onTap: () => setState(() => _isVolumeExpanded = !_isVolumeExpanded),
+      child: _LiquidGlass(
+        padding: EdgeInsets.symmetric(
+          horizontal: 20.w,
+          vertical: _isVolumeExpanded ? 18.h : 14.h,
+        ),
+        child: Column(
+          children: [
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  _fmt(
-                    _isSeeking
-                        ? Duration(milliseconds: _seekValue.toInt())
-                        : _currentPosition,
+                  'Sound settings',
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w500,
                   ),
-                  style: TextStyle(color: Colors.white60, fontSize: 12.sp),
                 ),
-                Text(
-                  _fmt(_totalDuration),
-                  style: TextStyle(color: Colors.white60, fontSize: 12.sp),
+                AnimatedRotation(
+                  turns: _isVolumeExpanded ? 0.5 : 0.0,
+                  duration: const Duration(milliseconds: 280),
+                  child: Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: Colors.white70,
+                    size: 24.r,
+                  ),
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─── Up Next Card (long-press → playlist overlay) ─────────────────────────
-
-  Widget _buildUpNextCard() {
-    final hasMultiple = _audioFiles.length > 1;
-    return GestureDetector(
-      onLongPress: hasMultiple ? _openPlaylist : null,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        child: _glass(
-          padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 14.h),
-          child: Row(
-            children: [
-              Container(
-                width: 38.r,
-                height: 38.r,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10.r),
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF0fbcf9), Color(0xFF52D7BF)],
-                  ),
-                ),
-                child: Icon(
-                  Icons.queue_music_rounded,
-                  color: Colors.white,
-                  size: 20.r,
-                ),
-              ),
-              SizedBox(width: 14.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          'UP NEXT',
-                          style: TextStyle(
-                            color: Colors.white38,
-                            fontSize: 10.sp,
-                            letterSpacing: 2,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        if (hasMultiple) ...[
-                          SizedBox(width: 8.w),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 6.w,
-                              vertical: 1.h,
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(4.r),
-                              color: const Color(0xFF0fbcf9).withOpacity(0.15),
-                            ),
-                            child: Text(
-                              'HOLD TO BROWSE',
-                              style: TextStyle(
-                                color: const Color(0xFF0fbcf9),
-                                fontSize: 8.sp,
-                                letterSpacing: 1,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    SizedBox(height: 2.h),
-                    Text(
-                      _upNextTitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                hasMultiple
-                    ? Icons.expand_less_rounded
-                    : Icons.chevron_right_rounded,
-                color: Colors.white30,
-                size: 22.r,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ─── Playlist Overlay ─────────────────────────────────────────────────────────
-
-  Widget _buildPlaylistOverlay() {
-    return AnimatedBuilder(
-      animation: _playlistController,
-      builder: (context, _) {
-        final blur = _playlistBlur.value * 22.0;
-        return Stack(
-          children: [
-            // ── Blurred scrim ──────────────────────────────────────────────
-            GestureDetector(
-              onTap: _closePlaylist,
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-                child: Container(
-                  color: Colors.black.withOpacity(0.55 * _playlistFade.value),
-                ),
-              ),
-            ),
-            // ── Exploding panel ───────────────────────────────────────────
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: FadeTransition(
-                opacity: _playlistFade,
-                child: ScaleTransition(
-                  scale: _playlistScale,
-                  alignment: Alignment.bottomCenter,
-                  child: SafeArea(
-                    top: false,
-                    child: Container(
-                      margin: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
-                      constraints: BoxConstraints(
-                        maxHeight: MediaQuery.of(context).size.height * 0.68,
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(28.r),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.08),
-                              borderRadius: BorderRadius.circular(28.r),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.15),
-                                width: 1.2,
-                              ),
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                // Handle + header
-                                _buildPlaylistHeader(),
-                                // Track rows
-                                Flexible(
-                                  child: ListView.builder(
-                                    padding: EdgeInsets.fromLTRB(
-                                      12.w,
-                                      0,
-                                      12.w,
-                                      16.h,
-                                    ),
-                                    physics: const BouncingScrollPhysics(),
-                                    itemCount: _audioFiles.length,
-                                    itemBuilder: (ctx, i) =>
-                                        _buildPlaylistRow(i),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildPlaylistHeader() {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(20.w, 14.h, 20.w, 8.h),
-      child: Column(
-        children: [
-          // Drag handle
-          Container(
-            width: 36.w,
-            height: 4.h,
-            decoration: BoxDecoration(
-              color: Colors.white24,
-              borderRadius: BorderRadius.circular(2.r),
-            ),
-          ),
-          SizedBox(height: 14.h),
-          Row(
-            children: [
-              Icon(
-                Icons.queue_music_rounded,
-                color: const Color(0xFF0fbcf9),
-                size: 20.r,
-              ),
-              SizedBox(width: 10.w),
-              Text(
-                'PLAYLIST',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 2.5,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '${_audioFiles.length} tracks',
-                style: TextStyle(color: Colors.white38, fontSize: 12.sp),
-              ),
-              SizedBox(width: 12.w),
-              GestureDetector(
-                onTap: _closePlaylist,
-                child: Icon(
-                  Icons.close_rounded,
-                  color: Colors.white38,
-                  size: 20.r,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 10.h),
-          Divider(color: Colors.white.withOpacity(0.08), height: 1),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPlaylistRow(int i) {
-    final isActive = i == audioIndex;
-    final title = _stripExtension(_audioFiles[i].split('/').last);
-
-    return GestureDetector(
-      onTap: () => _jumpToTrack(i),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        margin: EdgeInsets.symmetric(vertical: 4.h),
-        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16.r),
-          color: isActive
-              ? const Color(0xFF0fbcf9).withOpacity(0.14)
-              : Colors.white.withOpacity(0.04),
-          border: Border.all(
-            color: isActive
-                ? const Color(0xFF0fbcf9).withOpacity(0.45)
-                : Colors.transparent,
-            width: 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            // Track number / equaliser icon
-            SizedBox(
-              width: 28.r,
-              child: isActive
-                  ? Icon(
-                      Icons.equalizer_rounded,
-                      color: const Color(0xFF0fbcf9),
-                      size: 18.r,
-                    )
-                  : Text(
-                      '${i + 1}',
-                      style: TextStyle(
+            AnimatedCrossFade(
+              duration: const Duration(milliseconds: 320),
+              crossFadeState: _isVolumeExpanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              firstChild: const SizedBox(width: double.infinity, height: 0),
+              secondChild: Column(
+                children: [
+                  SizedBox(height: 16.h),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.volume_mute_rounded,
                         color: Colors.white30,
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w600,
+                        size: 18.r,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-            ),
-            SizedBox(width: 10.w),
-            // Title
-            Expanded(
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: isActive ? Colors.white : Colors.white70,
-                  fontSize: 13.sp,
-                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
-                ),
-              ),
-            ),
-            if (isActive)
-              Icon(
-                Icons.volume_up_rounded,
-                color: const Color(0xFF52D7BF),
-                size: 16.r,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ─── Controls Card ────────────────────────────────────────────────────────────
-
-  Widget _buildControlsCard() {
-    return _glass(
-      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 14.h),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // Loop toggle
-          _glassIconButton(
-            icon: Icons.loop_rounded,
-            size: 22.r,
-            active: _isLooping,
-            activeColor: const Color(0xFF52D7BF),
-            onTap: _toggleLoop,
-          ),
-
-          // Previous
-          _glassIconButton(
-            icon: Icons.skip_previous_rounded,
-            size: 34.r,
-            onTap: _playPrevious,
-          ),
-
-          // Play / Pause — accent button
-          GestureDetector(
-            onTap: _playPause,
-            child: Container(
-              width: 70.r,
-              height: 70.r,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [_themeColor1, _themeColor2],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF0fbcf9).withOpacity(0.45),
-                    blurRadius: 20,
-                    spreadRadius: 2,
+                      Expanded(
+                        child: SliderTheme(
+                          data: SliderThemeData(
+                            trackHeight: 3.h,
+                            thumbShape: RoundSliderThumbShape(
+                              enabledThumbRadius: 6.r,
+                            ),
+                            overlayShape: RoundSliderOverlayShape(
+                              overlayRadius: 14.r,
+                            ),
+                            activeTrackColor: Colors.white,
+                            inactiveTrackColor: Colors.white12,
+                            thumbColor: Colors.white,
+                          ),
+                          child: Slider(
+                            min: 0,
+                            max: 1,
+                            value: _currentVolume,
+                            onChanged: _onVolumeChanged,
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        Icons.volume_up_rounded,
+                        color: Colors.white70,
+                        size: 18.r,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8.h),
+                  // Shuffle toggle inside expanded panel
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Shuffle',
+                        style: GoogleFonts.inter(
+                          color: Colors.white60,
+                          fontSize: 13.sp,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: _toggleShuffle,
+                        child: Icon(
+                          Icons.shuffle_rounded,
+                          color: _isShuffled ? Colors.white : Colors.white30,
+                          size: 20.r,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-              child: Icon(
-                _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                color: Colors.white,
-                size: 38.r,
-              ),
             ),
-          ),
-
-          // Next
-          _glassIconButton(
-            icon: Icons.skip_next_rounded,
-            size: 34.r,
-            onTap: _playNext,
-          ),
-
-          // Shuffle placeholder
-          _glassIconButton(
-            icon: Icons.shuffle_rounded,
-            size: 22.r,
-            active: _isShuffled,
-            activeColor: const Color(0xFF52D7BF),
-            onTap: _toggleShuffle,
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // Reusable Glass Widgets
-  // ────────────────────────────────────────────────────────────────────────────
-
-  /// Core glassmorphism container with BackdropFilter blur.
-  Widget _glass({required Widget child, EdgeInsetsGeometry? padding}) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(28.r),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-        child: Container(
-          width: double.infinity,
-          padding: padding ?? EdgeInsets.all(18.r),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.07),
-            borderRadius: BorderRadius.circular(28.r),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.15),
-              width: 1.2,
-            ),
-          ),
-          child: child,
+          ],
         ),
       ),
     );
   }
 
-  /// Small circular glass icon button.
-  Widget _glassIconButton({
-    required IconData icon,
-    required VoidCallback onTap,
-    double? size,
-    bool active = false,
-    Color activeColor = Colors.white,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: ClipOval(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            width: (size ?? 22.r) + 18.r,
-            height: (size ?? 22.r) + 18.r,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withOpacity(active ? 0.18 : 0.07),
-              border: Border.all(
-                color: active
-                    ? activeColor.withOpacity(0.6)
-                    : Colors.white.withOpacity(0.12),
-                width: 1,
+  // ─── Ambient Row ──────────────────────────────────────────────────────────
+  // A horizontal row of circular glassy icon buttons that animates in/out
+  // above the player card when the rain icon is tapped.
+  // Only one option can be active at a time (radio behaviour).
+
+  Widget _buildAmbientRow() {
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOutCubic,
+      child: _ambientOpen
+          ? FadeTransition(
+              opacity: _ambientFade,
+              child: SlideTransition(
+                position: _ambientSlide,
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: 10.h),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: List.generate(_ambientVideos.length, (i) {
+                      final opt = _ambientVideos[i];
+                      final isActive = _selectedAmbientIndex == i;
+                      return GestureDetector(
+                        onTap: () => _selectAmbientVideo(i),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 220),
+                          width: 46.r,
+                          height: 46.r,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            // Active: brighter white fill; inactive: subtle glass
+                            color: isActive
+                                ? Colors.white.withOpacity(0.30)
+                                : Colors.white.withOpacity(0.10),
+                            border: Border.all(
+                              color: isActive
+                                  ? Colors.white.withOpacity(0.70)
+                                  : Colors.white.withOpacity(0.22),
+                              width: isActive ? 1.5 : 1.0,
+                            ),
+                            boxShadow: isActive
+                                ? [
+                                    BoxShadow(
+                                      color: Colors.white.withOpacity(0.18),
+                                      blurRadius: 10,
+                                      spreadRadius: 1,
+                                    ),
+                                  ]
+                                : [],
+                          ),
+                          child: ClipOval(
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                              child: Center(
+                                child: Icon(
+                                  opt.icon,
+                                  size: 22.r,
+                                  color: isActive
+                                      ? Colors.white
+                                      : Colors.white.withOpacity(0.65),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
               ),
-            ),
-            child: Icon(
-              icon,
-              size: size ?? 22.r,
-              color: active ? activeColor : Colors.white70,
+            )
+          : const SizedBox.shrink(),
+    );
+  }
+
+  // ─── Playlist Overlay ─────────────────────────────────────────────────────
+
+  Widget _buildPlaylistOverlay(double screenHeight) {
+    return Positioned.fill(
+      child: GestureDetector(
+        onTap: _closePlaylist,
+        child: Container(
+          color: Colors.black.withOpacity(0.45),
+          alignment: Alignment.bottomCenter,
+          child: GestureDetector(
+            onTap: () {},
+            child: ClipRRect(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(26.r)),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 32, sigmaY: 32),
+                child: Container(
+                  height: screenHeight * 0.58,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.14),
+                    border: Border(
+                      top: BorderSide(
+                        color: Colors.white.withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      SizedBox(height: 12.h),
+                      Container(
+                        width: 36.w,
+                        height: 4.h,
+                        decoration: BoxDecoration(
+                          color: Colors.white30,
+                          borderRadius: BorderRadius.circular(2.r),
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+                      Text(
+                        'Playlist',
+                        style: GoogleFonts.inter(
+                          color: Colors.white,
+                          fontSize: 17.sp,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      SizedBox(height: 12.h),
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: _audioFiles.length,
+                          itemBuilder: (context, i) {
+                            final isActive = i == audioIndex;
+                            return ListTile(
+                              leading: isActive
+                                  ? Icon(
+                                      Icons.music_note_rounded,
+                                      color: Colors.white,
+                                      size: 20.r,
+                                    )
+                                  : Icon(
+                                      Icons.music_note_outlined,
+                                      color: Colors.white38,
+                                      size: 20.r,
+                                    ),
+                              title: Text(
+                                _stripExtension(_audioFiles[i].split('/').last),
+                                style: GoogleFonts.inter(
+                                  color: isActive
+                                      ? Colors.white
+                                      : Colors.white70,
+                                  fontSize: 14.sp,
+                                  fontWeight: isActive
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              onTap: () => _jumpToTrack(i),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
         ),
