@@ -50,7 +50,8 @@ dependencies:
   flutter_media_metadata:
     path: packages/flutter_media_metadata
   palette_generator: ^0.3.3+7
-  adaptive_platform_ui: ^0.1.106
+  adaptive_platform_ui:
+    path: packages/adaptive_platform_ui
 dev_dependencies:
   flutter_test:
     sdk: flutter
