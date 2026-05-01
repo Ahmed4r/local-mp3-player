@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en-us"><head><script src="https://www.googletagmanager.com/gtm.js?id=GTM-MX6DBN9" async="async"></script><script src="/static/hash-fsujdolb/js/gtm.js" async="async"></script><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="ie=edge"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="twitter:card" content="summary"/><meta name="twitter:site" content="@dart_lang"/><meta name="twitter:description" content="Adaptive platform-specific widgets for Flutter. Auto renders native iOS 26+ liquid glass designs, traditional Cupertino widgets for older iOS versions, Material Design for Android."/><meta name="twitter:image" content="https://pub.dev/static/hash-fsujdolb/img/pub-dev-icon-cover-image.png"/><meta property="og:type" content="website"/><meta property="og:site_name" content="Dart packages"/><meta property="og:title" content="adaptive_platform_ui | Flutter package"/><meta property="og:description" content="Adaptive platform-specific widgets for Flutter. Auto renders native iOS 26+ liquid glass designs, traditional Cupertino widgets for older iOS versions, Material Design for Android."/><meta property="og:image" content="https://pub.dev/static/hash-fsujdolb/img/pub-dev-icon-cover-image.png"/><meta property="og:url" content="https://pub.dev/packages/adaptive_platform_ui"/><title>adaptive_platform_ui | Flutter package</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&amp;family=Google+Sans+Display:wght@400&amp;family=Google+Sans+Text:wght@400;500;700&amp;family=Google+Sans+Mono:wght@400;700&amp;display=swap"/><link rel="shortcut icon" href="/static/hash-fsujdolb/img/flutter-logo-32x32.png"/><meta rel="apple-touch-icon" href="/static/hash-fsujdolb/img/flutter-logo-32x32.png"/><meta rel="apple-touch-icon-precomposed" href="/static/hash-fsujdolb/img/flutter-logo-32x32.png"/><link rel="stylesheet" href="https://www.gstatic.com/glue/v25_0/ccb.min.css"/><link rel="search" type="application/opensearchdescription+xml" title="Dart packages" href="/osd.xml"/><link rel="canonical" href="https://pub.dev/packages/adaptive_platform_ui"/><meta name="description" content="Adaptive platform-specific widgets for Flutter. Auto renders native iOS 26+ liquid glass designs, traditional Cupertino widgets for older iOS versions, Material Design for Android."/><link rel="alternate" type="application/atom+xml" title="Recently published packages on pub.dev" href="/feed.atom"/><link rel="alternate" type="application/atom+xml" title="Recently published versions of package adaptive_platform_ui on pub.dev" href="/api/packages/adaptive_platform_ui/feed.atom"/><link rel="stylesheet" type="text/css" href="/static/hash-fsujdolb/material/bundle/styles.css"/><link rel="stylesheet" type="text/css" href="/static/hash-fsujdolb/css/style.css"/><script src="/static/hash-fsujdolb/material/bundle/script.min.js" defer="defer"></script><script src="/static/hash-fsujdolb/js/script.dart.js" defer="defer"></script><script src="https://www.gstatic.com/brandstudio/kato/cookie_choice_component/cookie_consent_bar.v3.js" defer="defer" data-autoload-cookie-consent-bar="true"></script><meta name="pub-page-data" content="eyJwa2dEYXRhIjp7InBhY2thZ2UiOiJhZGFwdGl2ZV9wbGF0Zm9ybV91aSIsInZlcnNpb24iOiIwLjEuMTA1IiwicHVibGlzaGVySWQiOiJtZWRpYWx5cmEuY29tIiwiaXNEaXNjb250aW51ZWQiOmZhbHNlLCJpc0xhdGVzdCI6dHJ1ZX0sInNlc3Npb25Bd2FyZSI6ZmFsc2V9"/><link rel="preload" href="/static/hash-fsujdolb/highlight/highlight-with-init.js" as="script"/></head><body class="light-theme"><script src="/static/hash-fsujdolb/js/dark-init.js"></script><noscript><iframe class="-gtm-iframe" src="https://www.googletagmanager.com/ns.html?id=GTM-MX6DBN9" height="0" width="0"></iframe></noscript><div class="site-header"><button class="hamburger" aria-label="menu toggle"></button><a class="logo" href="/" aria-label="Go to the landing page of pub.dev"><img class="site-logo" src="/static/hash-fsujdolb/img/pub-dev-logo.svg" alt="" width="140" height="30" role="presentation"/></a><div class="site-header-space"></div><div class="site-header-mask"></div><div class="site-header-search"><form action="/packages" method="GET"><input class="site-header-search-input" name="q" placeholder="New search..." autocomplete="on" title="Search"/></form></div><nav class="site-header-nav scroll-container"><div class="nav-login-container"><button id="-account-login" class="nav-main-button link">Sign in</button></div><div class="nav-container nav-help-container hoverable"><button class="nav-main-button">Help</button><div class="nav-hover-popup"><div class="nav-table-columns"><div class="nav-table-column"><h3>pub.dev</h3><a class="nav-link" href="/help/search" rel="noopener" target="_blank">Searching for packages</a><a class="nav-link" href="/help/scoring" rel="noopener" target="_blank">Package scoring and pub points</a></div><div class="nav-table-column"><h3>Flutter</h3><a class="nav-link" href="https://flutter.dev/using-packages/" rel="noopener" target="_blank">Using packages</a><a class="nav-link" href="https://flutter.dev/developing-packages/" rel="noopener" target="_blank">Developing packages and plugins</a><a class="nav-link" href="https://dart.dev/tools/pub/publishing" rel="noopener" target="_blank">Publishing a package</a></div><div class="nav-table-column"><h3>Dart</h3><a class="nav-link" href="https://dart.dev/guides/packages" rel="noopener" target="_blank">Using packages</a><a class="nav-link" href="https://dart.dev/tools/pub/publishing" rel="noopener" target="_blank">Publishing a package</a></div></div></div></div><div class="nav-container nav-help-container-mobile foldable"><h3 class="foldable-button">pub.dev <img class="foldable-icon" src="/static/hash-fsujdolb/img/nav-mobile-foldable-icon.svg" alt="toggle folding of the section" width="13" height="6"/></h3><div class="foldable-content"><a class="nav-link" href="/help/search" rel="noopener" target="_blank">Searching for packages</a><a class="nav-link" href="/help/scoring" rel="noopener" target="_blank">Package scoring and pub points</a></div></div><div class="nav-container nav-help-container-mobile foldable"><h3 class="foldable-button">Flutter <img class="foldable-icon" src="/static/hash-fsujdolb/img/nav-mobile-foldable-icon.svg" alt="toggle folding of the section" width="13" height="6"/></h3><div class="foldable-content"><a class="nav-link" href="https://flutter.dev/using-packages/" rel="noopener" target="_blank">Using packages</a><a class="nav-link" href="https://flutter.dev/developing-packages/" rel="noopener" target="_blank">Developing packages and plugins</a><a class="nav-link" href="https://dart.dev/tools/pub/publishing" rel="noopener" target="_blank">Publishing a package</a></div></div><div class="nav-container nav-help-container-mobile foldable"><h3 class="foldable-button">Dart <img class="foldable-icon" src="/static/hash-fsujdolb/img/nav-mobile-foldable-icon.svg" alt="toggle folding of the section" width="13" height="6"/></h3><div class="foldable-content"><a class="nav-link" href="https://dart.dev/guides/packages" rel="noopener" target="_blank">Using packages</a><a class="nav-link" href="https://dart.dev/tools/pub/publishing" rel="noopener" target="_blank">Publishing a package</a></div></div></nav><button class="-pub-theme-toggle" aria-label="light/dark theme toggle"></button></div><div id="banner-container"></div><main class="container"><div class="detail-wrapper -active -has-info-box"><div class="detail-header -is-loose"><div class="detail-container"><div class="detail-header-outer-block"><div class="detail-header-content-block"><h1 class="title pub-monochrome-icon-hoverable">adaptive_platform_ui 0.1.105 <span class="pkg-page-title-copy"><img class="pub-monochrome-icon pkg-page-title-copy-icon filter-invert-on-dark" src="/static/hash-fsujdolb/img/content-copy-icon.svg" alt="copy &quot;adaptive_platform_ui: ^0.1.105&quot; to clipboard" width="18" height="18" title="Copy &quot;adaptive_platform_ui: ^0.1.105&quot; to clipboard" data-copy-content="adaptive_platform_ui: ^0.1.105" data-ga-click-event="copy-package-version"/><div class="pkg-page-title-copy-feedback"><span class="code">adaptive_platform_ui: ^0.1.105</span> copied to clipboard</div></span></h1><div class="metadata">Published <span><a class="-x-ago" href="" title="Apr 23, 2026" role="button" data-timestamp="1776955872409">7 days ago</a></span> • <a class="-pub-publisher" href="/publishers/medialyra.com"><img class="-pub-publisher-shield filter-invert-on-dark" src="/static/hash-fsujdolb/img/material-icon-verified.svg" alt="verified publisher" width="14" height="14" title="Published by a pub.dev verified publisher"/>medialyra.com</a></div><div class="detail-tags-and-like"><div class="detail-tags"><div class="-pub-tag-badge"><span class="tag-badge-main">SDK</span><a class="tag-badge-sub" href="/packages?q=sdk%3Aflutter" rel="nofollow" title="Packages compatible with Flutter SDK">Flutter</a></div><div class="-pub-tag-badge"><span class="tag-badge-main">Platform</span><a class="tag-badge-sub" href="/packages?q=platform%3Aandroid" rel="nofollow" title="Packages compatible with Android platform">Android</a><a class="tag-badge-sub" href="/packages?q=platform%3Aios" rel="nofollow" title="Packages compatible with iOS platform">iOS</a></div></div><div class="like-button-and-label"><button class="like-button-and-label--button -pub-icon-button" data-ga-click-event="toggle-like" aria-pressed="false" data-package="adaptive_platform_ui" data-value="287" title="Like this package"><img class="-pub-icon-button-icon--on" src="/static/hash-fsujdolb/img/like-active.svg" alt="liked status: active" width="18" height="18"/><img class="-pub-icon-button-icon--off" src="/static/hash-fsujdolb/img/like-inactive.svg" alt="liked status: inactive" width="18" height="18"/></button><span class="like-button-and-label--count-wrapper"><span class="like-button-and-label--count">287</span></span></div></div></div></div></div></div><div class="detail-container"><div class="detail-lead"><div class="detail-metadata-toggle"><div class="detail-metadata-toggle-icon">→</div><h3 class="detail-lead-title">Metadata</h3></div><p class="detail-lead-text">Adaptive platform-specific widgets for Flutter. Auto renders native iOS 26+ liquid glass designs, traditional Cupertino widgets for older iOS versions, Material Design for Android.</p><p class="detail-lead-more"><a class="detail-metadata-toggle">More...</a></p></div></div><div class="detail-body"><div class="detail-tabs"><div class="detail-tabs-wide-header"><div class="detail-container"><ul class="detail-tabs-header"><li class="detail-tab tab-button detail-tab-readme-title -active">Readme</li><li class="detail-tab tab-link detail-tab-changelog-title"><a href="/packages/adaptive_platform_ui/changelog" role="button">Changelog</a></li><li class="detail-tab tab-link detail-tab-example-title"><a href="/packages/adaptive_platform_ui/example" role="button">Example</a></li><li class="detail-tab tab-link detail-tab-installing-title"><a href="/packages/adaptive_platform_ui/install" role="button">Installing</a></li><li class="detail-tab tab-link detail-tab-versions-title"><a href="/packages/adaptive_platform_ui/versions" role="button">Versions</a></li><li class="detail-tab tab-link detail-tab-analysis-title"><a href="/packages/adaptive_platform_ui/score" role="button">Scores</a></li></ul></div></div><div class="detail-container detail-body-main"><div class="detail-tabs-content"><section class="tab-content detail-tab-readme-content -active markdown-body"><h1 id="adaptive-platform-ui" class="hash-header">Adaptive Platform UI <a href="#adaptive-platform-ui" class="hash-link">#</a></h1>
+<p><a href="https://github.com/berkaycatak/adaptive_platform_ui/actions" rel="ugc"><img src="https://external-images.pub.dev/aLmg9An9nGOcctpfyfMsMvWOVPHkUmRnAMDGUSRkzQo%3D/1777593600000/https%3A%2F%2Fgithub.com%2Fberkaycatak%2Fadaptive_platform_ui%2Fworkflows%2FCI%2Fbadge.svg" alt="CI"></a>
+<a href="https://github.com/berkaycatak/adaptive_platform_ui/releases" rel="ugc"><img src="https://external-images.pub.dev/%2Fht97%2BD0jiYasvOBv7TsEqQ%2FQUK9lP0dV33tai9DwKg%3D/1777593600000/https%3A%2F%2Fgithub.com%2Fberkaycatak%2Fadaptive_platform_ui%2Fworkflows%2FRelease%2Fbadge.svg" alt="Release"></a>
+<a href="https://opensource.org/licenses/MIT" rel="ugc"><img src="https://external-images.pub.dev/S4qTnN%2FSTNckK%2FR%2B9rr%2FB71%2Bk36MOngTVfaNAs24lrM%3D/1777593600000/https%3A%2F%2Fimg.shields.io%2Fbadge%2FLicense-MIT-blue.svg" alt="License: MIT"></a>
+<a href="https://flutter.dev"><img src="https://external-images.pub.dev/tjuRE9yY6bN8xIxetNIZCi%2BWcrL9d2iyx9qyLu%2BPI0M%3D/1777593600000/https%3A%2F%2Fimg.shields.io%2Fbadge%2FFlutter-%253E%253D3.0.0-blue.svg" alt="Flutter"></a></p>
+<p>A Flutter package that provides adaptive platform-specific widgets with native iOS 26+ designs, traditional Cupertino widgets for older iOS versions, and Material Design for Android.</p>
+<img src="https://external-images.pub.dev/WOFHL0jNV66te%2BJKtnWd0wErHQRQ1RlNHkLZuQmCWPw%3D/1777593600000/https%3A%2F%2Fgithub.com%2Fberkaycatak%2Fadaptive_platform_ui%2Fblob%2Fmain%2Fimg%2Fhighlight-img.png%3Fraw%3Dtrue" alt="iOS 26 Native Toolbar">
+<h2 id="ios-26-native-toolbar--tab-bar" class="hash-header">iOS 26+ Native Toolbar &amp; Tab Bar <a href="#ios-26-native-toolbar--tab-bar" class="hash-link">#</a></h2>
+<p align="center">
+  <img src="https://external-images.pub.dev/yqTQcsT0kvP8zA7e%2BosYQq8to9DwezCgTurvfI%2FzxMM%3D/1777593600000/https%3A%2F%2Fgithub.com%2Fberkaycatak%2Fadaptive_platform_ui%2Fraw%2Fmain%2Fimg%2Fappbar.gif" alt="iOS 26 Native Toolbar" width="300">
+  <img src="https://external-images.pub.dev/%2FA1FypoRbviXXoU6cQWJf4Y%2FL60E6l71Wo5xo9Awuk4%3D/1777593600000/https%3A%2F%2Fgithub.com%2Fberkaycatak%2Fadaptive_platform_ui%2Fraw%2Fmain%2Fimg%2Fbottombar.gif" alt="iOS 26 Native Tab Bar" width="300">
+</p>
+  <img src="https://external-images.pub.dev/YnXqZNp%2FLxIjXI5X70%2FJVyylYlJ5mm%2FoBrRQz92Pc20%3D/1777593600000/https%3A%2F%2Fgithub.com%2Fberkaycatak%2Fadaptive_platform_ui%2Fblob%2Fmain%2Fimg%2Fbottom_nav2_p.png%3Fraw%3Dtrue" alt="iOS 26 Native Tab Bar">
+  <img src="https://external-images.pub.dev/7OfLcsWOHFm3JsZHvtIPIAkBrkXJhyUHIKdTcYadxnI%3D/1777593600000/https%3A%2F%2Fgithub.com%2Fberkaycatak%2Fadaptive_platform_ui%2Fblob%2Fmain%2Fimg%2Ftoolbar2_p.png%3Fraw%3Dtrue" alt="iOS 26 Native Tab Bar">
+<p><img src="https://external-images.pub.dev/Mj9ZAYpwhfEWxoEpjKgtEMN6DpEkQ7R0QDyG6T%2F8Tsw%3D/1777593600000/https%3A%2F%2Fgithub.com%2Fuser-attachments%2Fassets%2Fda33cb62-94d7-47da-8f0c-327bbd6ee04e" alt="native_search"></p>
+<p>Native iOS 26 UIToolbar and UITabBar with Liquid Glass blur effects, minimize behavior, and native gesture handling.</p>
+<h2 id="features" class="hash-header">Features <a href="#features" class="hash-link">#</a></h2>
+<p><strong>AdaptiveApp</strong> - Unified app configuration for all platforms:</p>
+<ul>
+<li>Separate themes for Material (Android) and Cupertino (iOS)</li>
+<li>Full theme mode support (light, dark, system)</li>
+<li>Router support via <code>AdaptiveApp.router()</code></li>
+<li>Zero configuration required</li>
+</ul>
+<p><strong>iOS 26+ Native Designs</strong> - Modern iOS 26 components with:</p>
+<ul>
+<li><strong>Native UIToolbar</strong> - Liquid Glass blur effects with native iOS 26 design</li>
+<li><strong>Native UITabBar</strong> - Tab bar with minimize behavior and smooth animations</li>
+<li><strong>Native UIButton</strong> - Button styles with spring animations and haptic feedback</li>
+<li><strong>Native UISegmentedControl</strong> - Segmented controls with SF Symbol support</li>
+<li><strong>Native UISwitch &amp; UISlider</strong> - Switches and sliders with native animations</li>
+<li>Native corner radius and shadows</li>
+<li>Smooth spring animations</li>
+<li>Dynamic color system (light/dark mode)</li>
+<li>Multiple component styles</li>
+</ul>
+<p><strong>iOS Legacy Support</strong> - Traditional Cupertino widgets for iOS 18 and below</p>
+<p><strong>Material Design</strong> - Full Material 3 support for Android</p>
+<p><strong>Automatic Platform Detection</strong> - Zero configuration required</p>
+<p><strong>Version-Aware Rendering</strong> - Automatically selects appropriate widget based on iOS version</p>
+<h2 id="widget-showcase" class="hash-header">Widget Showcase <a href="#widget-showcase" class="hash-link">#</a></h2>
+<h3 id="important-localization-setup" class="hash-header">Important: Localization Setup <a href="#important-localization-setup" class="hash-link">#</a></h3>
+<p>⚠️ <strong>For proper localization support (automatic translations for date/time pickers, buttons, etc.), you must add localization delegates to your <code>AdaptiveApp</code>:</strong></p>
+<pre><code class="language-dart">import 'package:flutter_localizations/flutter_localizations.dart';
+
+AdaptiveApp(
+  localizationsDelegates: [
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate, // Important!
+    GlobalWidgetsLocalizations.delegate,
+  ],
+  supportedLocales: [
+    Locale('en', ''), // English
+    Locale('de', ''), // German
+    Locale('tr', ''), // Turkish
+    // Add more locales as needed
+  ],
+  // ... rest of your app configuration
+)
+</code></pre>
+<p>Without these delegates, date/time pickers and other widgets will show English text regardless of system language.</p>
+<h3 id="adaptivescaffold-with-adaptiveappbar" class="hash-header">AdaptiveScaffold with AdaptiveAppBar <a href="#adaptivescaffold-with-adaptiveappbar" class="hash-link">#</a></h3>
+<img src="https://external-images.pub.dev/d28Ub4B0IyqM5iWoQ94%2BvB2hXM4pnn%2BhGC2Cta%2BWbE8%3D/1777593600000/https%3A%2F%2Fgithub.com%2Fberkaycatak%2Fadaptive_platform_ui%2Fblob%2Fmain%2Fimg%2Ftoolbar_p.png%3Fraw%3Dtrue" alt="iOS 26 Native Toolbar">
+<p><strong>Basic Usage:</strong></p>
+<pre><code class="language-dart">AdaptiveScaffold(
+  appBar: AdaptiveAppBar(
+    title: 'My App',
+    actions: [
+      AdaptiveAppBarAction(
+        onPressed: () {},
+        iosSymbol: 'gear',
+        icon: Icons.settings,
+      ),
+    ],
+  ),
+  bottomNavigationBar: AdaptiveBottomNavigationBar(
+    items: [
+      AdaptiveNavigationDestination(
+        icon: 'house.fill',
+        label: 'Home',
+      ),
+      AdaptiveNavigationDestination(
+        icon: 'person.fill',
+        label: 'Profile',
+      ),
+    ],
+    selectedIndex: 0,
+    onTap: (index) {},
+  ),
+  body: YourContent(),
+)
+</code></pre>
+<p><strong>iOS 26 Native Toolbar:</strong></p>
+<pre><code class="language-dart">AdaptiveScaffold(
+  appBar: AdaptiveAppBar(
+    title: 'My App',
+    useNativeToolbar: true, // Enable native iOS 26 UIToolbar with Liquid Glass effects
+    actions: [...],
+  ),
+  body: YourContent(),
+)
+</code></pre>
+<p><strong>iOS 26 Native Bottom Bar:</strong></p>
+<pre><code class="language-dart">AdaptiveScaffold(
+  bottomNavigationBar: AdaptiveBottomNavigationBar(
+    useNativeBottomBar: true, // Enable native iOS 26 UITabBar with Liquid Glass effects (default)
+    items: [...],
+    selectedIndex: 0,
+    onTap: (index) {},
+  ),
+  body: YourContent(),
+)
+</code></pre>
+<p><strong>No AppBar or Bottom Navigation:</strong></p>
+<pre><code class="language-dart">// If appBar and bottomNavigationBar are null, neither will be shown
+AdaptiveScaffold(
+  body: YourContent(),
+)
+</code></pre>
+<p><strong>Key Features:</strong></p>
+<ul>
+<li>🎨 <strong>AdaptiveAppBar</strong>: Centralized app bar configuration</li>
+<li>📱 <strong>AdaptiveBottomNavigationBar</strong>: Centralized bottom navigation configuration</li>
+<li>🔧 <strong>Custom Navigation Bars</strong>: Provide your own navigation components</li>
+<li>🌟 <strong>Native iOS 26 Components</strong>: Optional Liquid Glass effects with native UIKit</li>
+<li>🎯 <strong>Priority System</strong>: Custom bars take priority over auto-generated ones</li>
+<li>🔄 <strong>Flexible</strong>: Null parameters hide components</li>
+</ul>
+<p>Adaptive Bottom Navigation Bar (Destinations):</p>
+<p align="center">
+<img src="https://external-images.pub.dev/Pt1wCKUfbYVoDBuvMo9weXPUfcbqMuzOD9wAW5NzpU4%3D/1777593600000/https%3A%2F%2Fraw.githubusercontent.com%2Fberkaycatak%2Fadaptive_platform_ui%2Frefs%2Fheads%2Fmain%2Fimg%2Fbottom_nav_p.png" alt="Native Toolbar">
+</p>
+<h3 id="adaptivebutton" class="hash-header">AdaptiveButton <a href="#adaptivebutton" class="hash-link">#</a></h3>
+<img src="https://external-images.pub.dev/gcmS2pO8q0G7dB6D9EoyDt%2Fhhxwa5JQTPz0uqYCTrEM%3D/1777593600000/https%3A%2F%2Fraw.githubusercontent.com%2Fberkaycatak%2Fadaptive_platform_ui%2Frefs%2Fheads%2Fmain%2Fimg%2Fbuttons_p.png" alt="iOS 26 Native Toolbar">
+<pre><code class="language-dart">// Basic button with label
+AdaptiveButton(
+  onPressed: () {},
+  label: 'Click Me',
+)
+
+// Button with custom child
+AdaptiveButton.child(
+  onPressed: () {},
+  child: Row(
+    children: [
+      Icon(Icons.add),
+      Text('Add Item'),
+    ],
+  ),
+)
+
+// Icon button
+AdaptiveButton.icon(
+  onPressed: () {},
+  icon: Icons.favorite,
+)
+</code></pre>
+<h3 id="adaptivealertdialog" class="hash-header">AdaptiveAlertDialog <a href="#adaptivealertdialog" class="hash-link">#</a></h3>
+<img src="https://external-images.pub.dev/igyQeIJzKE5VDgjsh3uBYCOOdt7kwJKeaFCS22Z2x2M%3D/1777593600000/https%3A%2F%2Fraw.githubusercontent.com%2Fberkaycatak%2Fadaptive_platform_ui%2Frefs%2Fheads%2Fmain%2Fimg%2Falert_p.png" alt="iOS 26 Native Toolbar">
+<pre><code class="language-dart">// Basic alert dialog
+AdaptiveAlertDialog.show(
+  context: context,
+  title: 'Confirm',
+  message: 'Are you sure?',
+  icon: 'checkmark.circle.fill',
+  actions: [
+    AlertAction(
+      title: 'Cancel',
+      style: AlertActionStyle.cancel,
+      onPressed: () {},
+    ),
+    AlertAction(
+      title: 'Confirm',
+      style: AlertActionStyle.primary,
+      onPressed: () {
+        // Do something
+      },
+    ),
+  ],
+);
+
+// Alert dialog with text input
+final result = await AdaptiveAlertDialog.show(
+  context: context,
+  title: 'Enter Your Name',
+  message: 'Please provide your name',
+  icon: 'person.fill',
+  input: AdaptiveAlertDialogInput(
+    placeholder: 'Your name',
+    initialValue: '',
+    keyboardType: TextInputType.text,
+  ),
+  actions: [
+    AlertAction(
+      title: 'Cancel',
+      style: AlertActionStyle.cancel,
+      onPressed: () {},
+    ),
+    AlertAction(
+      title: 'Submit',
+      style: AlertActionStyle.primary,
+      onPressed: () {},
+    ),
+  ],
+);
+
+// result contains the text entered by the user
+if (result != null) {
+  print('User entered: $result');
+}
+</code></pre>
+<h3 id="adaptivecontextmenu" class="hash-header">AdaptiveContextMenu <a href="#adaptivecontextmenu" class="hash-link">#</a></h3>
+<pre><code class="language-dart">AdaptiveContextMenu(
+  actions: [
+    AdaptiveContextMenuAction(
+      title: 'Edit',
+      icon: PlatformInfo.isIOS ? CupertinoIcons.pencil : Icons.edit,
+      onPressed: () {
+        print('Edit pressed');
+      },
+    ),
+    AdaptiveContextMenuAction(
+      title: 'Share',
+      icon: PlatformInfo.isIOS ? CupertinoIcons.share : Icons.share,
+      onPressed: () {
+        print('Share pressed');
+      },
+    ),
+    AdaptiveContextMenuAction(
+      title: 'Delete',
+      icon: PlatformInfo.isIOS ? CupertinoIcons.trash : Icons.delete,
+      isDestructive: true,
+      onPressed: () {
+        print('Delete pressed');
+      },
+    ),
+  ],
+  child: Container(
+    padding: EdgeInsets.all(16),
+    child: Text('Long press me'),
+  ),
+)
+</code></pre>
+<p><strong>iOS</strong>: Uses <code>CupertinoContextMenu</code> with preview and native animations.
+<strong>Android</strong>: Uses <code>PopupMenuButton</code> with Material Design styling.</p>
+<h3 id="adaptivepopupmenubutton" class="hash-header">AdaptivePopupMenuButton <a href="#adaptivepopupmenubutton" class="hash-link">#</a></h3>
+<p align="center">
+<img src="https://external-images.pub.dev/Yk3RnhPBj%2FhapkZ6nBkMUSMtK1E00oOM32IZ%2BLZIA6M%3D/1777593600000/https%3A%2F%2Fraw.githubusercontent.com%2Fberkaycatak%2Fadaptive_platform_ui%2Frefs%2Fheads%2Fmain%2Fimg%2Fpopup_p.png" alt="iOS 26 Native Popup">
+</p>
+<pre><code class="language-dart">// Text button with popup menu
+AdaptivePopupMenuButton.text&lt;String&gt;(
+  label: 'Options',
+  items: [
+    AdaptivePopupMenuItem(
+        label: 'Edit',
+        icon:  PlatformInfo.isIOS26OrHigher() ?  'pencil' : Icons.edit,
+        value: 'edit',
+      ),
+      AdaptivePopupMenuItem(
+        label: 'Delete',
+        icon: PlatformInfo.isIOS26OrHigher() ?  'trash' : Icons.delete,
+        value: 'delete',
+      ),
+      AdaptivePopupMenuDivider(),
+      AdaptivePopupMenuItem(
+        label: 'Share',
+        icon: PlatformInfo.isIOS26OrHigher() ? 'square.and.arrow.up' : Icons.share,
+        value: 'share',
+      ),
+  ],
+  onSelected: (index, item) {
+    print('Selected: ${item.value}');
+  },
+)
+
+// Icon button with popup menu
+AdaptivePopupMenuButton.icon&lt;String&gt;(
+  icon: 'ellipsis.circle',
+  items: [...],
+  onSelected: (index, item) { },
+  buttonStyle: PopupButtonStyle.glass,
+)
+
+// Custom widget with popup menu
+AdaptivePopupMenuButton.widget&lt;String&gt;(
+  items: [
+    AdaptivePopupMenuItem(label: 'Option 1', value: 'opt1'),
+    AdaptivePopupMenuItem(label: 'Option 2', value: 'opt2'),
+  ],
+  onSelected: (index, item) {
+    print('Selected: ${item.value}');
+  },
+  child: Container(
+    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    decoration: BoxDecoration(
+      color: Colors.blue.withOpacity(0.1),
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.menu),
+        SizedBox(width: 8),
+        Text('Custom Button'),
+      ],
+    ),
+  ),
+)
+</code></pre>
+<h3 id="adaptivesegmentedcontrol" class="hash-header">AdaptiveSegmentedControl <a href="#adaptivesegmentedcontrol" class="hash-link">#</a></h3>
+<p align="center">
+  <img src="https://external-images.pub.dev/R0IFYyP5ehKfI2ibYimd15o9vhg4AtDJKbkqUjG1e74%3D/1777593600000/https%3A%2F%2Fgithub.com%2Fberkaycatak%2Fadaptive_platform_ui%2Fraw%2Fmain%2Fimg%2Fsegmented_control.gif" alt="Segmented Control" width="300">
+</p>
+<pre><code class="language-dart">AdaptiveSegmentedControl(
+  labels: ['One', 'Two', 'Three'],
+  selectedIndex: 0,
+  onValueChanged: (index) {
+    print('Selected: $index');
+  },
+)
+
+// With icons (SF Symbols on iOS)
+AdaptiveSegmentedControl(
+  labels: [],
+  sfSymbols: [
+    'house.fill',
+    'person.fill',
+    'gear',
+  ],
+  selectedIndex: 0,
+  onValueChanged: (index) {},
+  iconColor: CupertinoColors.systemBlue,
+)
+</code></pre>
+<h3 id="adaptiveswitch" class="hash-header">AdaptiveSwitch <a href="#adaptiveswitch" class="hash-link">#</a></h3>
+<p align="center">
+  <img src="https://external-images.pub.dev/Px8SMD7wLyRndVz5CJEZwGWzElmNVrepMmIPb1yiD4A%3D/1777593600000/https%3A%2F%2Fgithub.com%2Fberkaycatak%2Fadaptive_platform_ui%2Fraw%2Fmain%2Fimg%2Fswitch.gif" alt="Adaptive Switch" width="300">
+</p>
+<pre><code class="language-dart">AdaptiveSwitch(
+  value: true,
+  onChanged: (value) {
+    print('Switch: $value');
+  },
+)
+</code></pre>
+<h3 id="adaptiveslider" class="hash-header">AdaptiveSlider <a href="#adaptiveslider" class="hash-link">#</a></h3>
+<p align="center">
+  <img src="https://external-images.pub.dev/t%2BosHoOTX6IbN%2BJ6sNxy2qVdTjVfbiYj6YYOM1H6Hpc%3D/1777593600000/https%3A%2F%2Fgithub.com%2Fberkaycatak%2Fadaptive_platform_ui%2Fraw%2Fmain%2Fimg%2Fslider.gif" alt="Adaptive Slider" width="300">
+</p>
+<pre><code class="language-dart">AdaptiveSlider(
+  value: 0.5,
+  onChanged: (value) {
+    print('Slider: $value');
+  },
+  min: 0.0,
+  max: 1.0,
+)
+</code></pre>
+<h3 id="adaptivecheckbox" class="hash-header">AdaptiveCheckbox <a href="#adaptivecheckbox" class="hash-link">#</a></h3>
+<pre><code class="language-dart">AdaptiveCheckbox(
+  value: true,
+  onChanged: (value) {
+    print('Checkbox: $value');
+  },
+)
+
+// Tristate checkbox
+AdaptiveCheckbox(
+  value: null, // Can be true, false, or null
+  tristate: true,
+  onChanged: (value) {
+    print('Checkbox: $value');
+  },
+)
+</code></pre>
+<h3 id="adaptiveradio" class="hash-header">AdaptiveRadio <a href="#adaptiveradio" class="hash-link">#</a></h3>
+<pre><code class="language-dart">enum Options { option1, option2, option3 }
+Options? _selectedOption = Options.option1;
+
+AdaptiveRadio&lt;Options&gt;(
+  value: Options.option1,
+  groupValue: _selectedOption,
+  onChanged: (Options? value) {
+    setState(() {
+      _selectedOption = value;
+    });
+  },
+)
+</code></pre>
+<h3 id="adaptivecard" class="hash-header">AdaptiveCard <a href="#adaptivecard" class="hash-link">#</a></h3>
+<pre><code class="language-dart">AdaptiveCard(
+  padding: EdgeInsets.all(16),
+  child: Text('Card Content'),
+)
+
+// Card with custom styling
+AdaptiveCard(
+  padding: EdgeInsets.all(16),
+  color: Colors.blue.withValues(alpha: 0.1),
+  borderRadius: BorderRadius.circular(20),
+  elevation: 8, // Android only
+  child: Column(
+    children: [
+      Text('Custom Card'),
+      Text('With multiple elements'),
+    ],
+  ),
+)
+</code></pre>
+<h3 id="adaptivebadge" class="hash-header">AdaptiveBadge <a href="#adaptivebadge" class="hash-link">#</a></h3>
+<pre><code class="language-dart">AdaptiveBadge(
+  count: 5,
+  child: Icon(Icons.notifications),
+)
+
+// Badge with text label
+AdaptiveBadge(
+  label: 'NEW',
+  backgroundColor: Colors.red,
+  child: Icon(Icons.mail),
+)
+
+// Large badge
+AdaptiveBadge(
+  count: 99,
+  isLarge: true,
+  child: Icon(Icons.message),
+)
+</code></pre>
+<h3 id="adaptivetooltip" class="hash-header">AdaptiveTooltip <a href="#adaptivetooltip" class="hash-link">#</a></h3>
+<pre><code class="language-dart">AdaptiveTooltip(
+  message: 'This is a tooltip',
+  child: Icon(Icons.info),
+)
+
+// Tooltip positioned above
+AdaptiveTooltip(
+  message: 'Tooltip appears above',
+  preferBelow: false,
+  child: Icon(Icons.help),
+)
+</code></pre>
+<h3 id="adaptivesnackbar" class="hash-header">AdaptiveSnackBar <a href="#adaptivesnackbar" class="hash-link">#</a></h3>
+<pre><code class="language-dart">// Basic snackbar
+AdaptiveSnackBar.show(
+  context,
+  message: 'Operation completed successfully!',
+  type: AdaptiveSnackBarType.success,
+)
+
+// Snackbar with action button
+AdaptiveSnackBar.show(
+  context,
+  message: 'File deleted',
+  type: AdaptiveSnackBarType.info,
+  action: 'Undo',
+  onActionPressed: () {
+    // Undo action
+  },
+)
+
+// Custom duration
+AdaptiveSnackBar.show(
+  context,
+  message: 'This will stay longer',
+  duration: Duration(seconds: 8),
+)
+
+// Different types
+AdaptiveSnackBar.show(context, message: 'Info', type: AdaptiveSnackBarType.info);
+AdaptiveSnackBar.show(context, message: 'Success', type: AdaptiveSnackBarType.success);
+AdaptiveSnackBar.show(context, message: 'Warning', type: AdaptiveSnackBarType.warning);
+AdaptiveSnackBar.show(context, message: 'Error', type: AdaptiveSnackBarType.error);
+</code></pre>
+<p><strong>iOS</strong>: Banner-style notification at the top with slide/fade animations, tap to dismiss, and icon indicators.
+<strong>Android</strong>: Material SnackBar at the bottom with standard Material Design appearance.</p>
+<h3 id="adaptivedatepicker" class="hash-header">AdaptiveDatePicker <a href="#adaptivedatepicker" class="hash-link">#</a></h3>
+<pre><code class="language-dart">// Basic date picker
+final selectedDate = await AdaptiveDatePicker.show(
+  context: context,
+  initialDate: DateTime.now(),
+);
+
+// Date picker with range
+final selectedDate = await AdaptiveDatePicker.show(
+  context: context,
+  initialDate: DateTime.now(),
+  firstDate: DateTime(2020),
+  lastDate: DateTime(2025),
+);
+
+// Date and time picker (iOS)
+final selectedDateTime = await AdaptiveDatePicker.show(
+  context: context,
+  initialDate: DateTime.now(),
+  mode: CupertinoDatePickerMode.dateAndTime,
+);
+
+if (selectedDate != null) {
+  print('Selected: ${selectedDate.toString()}');
+}
+</code></pre>
+<p><strong>iOS</strong>: Uses <code>CupertinoDatePicker</code> in a modal bottom sheet with Cancel/Done buttons.
+<strong>Android</strong>: Uses Material <code>DatePickerDialog</code>.</p>
+<h3 id="adaptivetimepicker" class="hash-header">AdaptiveTimePicker <a href="#adaptivetimepicker" class="hash-link">#</a></h3>
+<pre><code class="language-dart">// 12-hour format
+final selectedTime = await AdaptiveTimePicker.show(
+  context: context,
+  initialTime: TimeOfDay.now(),
+  use24HourFormat: false,
+);
+
+// 24-hour format
+final selectedTime = await AdaptiveTimePicker.show(
+  context: context,
+  initialTime: TimeOfDay.now(),
+  use24HourFormat: true,
+);
+
+if (selectedTime != null) {
+  print('Selected: ${selectedTime.format(context)}');
+}
+</code></pre>
+<p><strong>iOS</strong>: Uses <code>CupertinoDatePicker</code> in time mode in a modal bottom sheet.
+<strong>Android</strong>: Uses Material <code>TimePickerDialog</code>.</p>
+<h3 id="adaptivelisttile" class="hash-header">AdaptiveListTile <a href="#adaptivelisttile" class="hash-link">#</a></h3>
+<pre><code class="language-dart">// Basic list tile
+AdaptiveListTile(
+  title: Text('Profile'),
+  subtitle: Text('View your profile'),
+  hideBottomDivider: false, // Hide bottom border, useful for last item (iOS only)
+  onTap: () {
+    // Handle tap
+  },
+)
+
+// List tile with leading and trailing
+AdaptiveListTile(
+  leading: Icon(Icons.person),
+  title: Text('Profile'),
+  subtitle: Text('View your profile'),
+  trailing: Icon(Icons.chevron_right),
+  onTap: () {
+    // Handle tap
+  },
+)
+
+// Selectable list tile
+AdaptiveListTile(
+  leading: Icon(Icons.star),
+  title: Text('Favorite'),
+  selected: true,
+  trailing: Icon(Icons.check_circle),
+  onTap: () {
+    // Handle tap
+  },
+)
+
+// List tile with custom trailing widget
+AdaptiveListTile(
+  title: Text('Enable Feature'),
+  subtitle: Text('Toggle to enable'),
+  trailing: AdaptiveSwitch(
+    value: switchValue,
+    onChanged: (value) {
+      // Handle change
+    },
+  ),
+)
+</code></pre>
+<p><strong>iOS</strong>: Uses CupertinoListTile-like styling with bottom border separator.
+<strong>Android</strong>: Uses Material <code>ListTile</code>.</p>
+<h3 id="adaptivetextfield" class="hash-header">AdaptiveTextField <a href="#adaptivetextfield" class="hash-link">#</a></h3>
+<pre><code class="language-dart">// Basic text field
+AdaptiveTextField(
+  placeholder: 'Enter your name',
+  onChanged: (value) {
+    print('Text: $value');
+  },
+)
+
+// Text field with icons
+AdaptiveTextField(
+  placeholder: 'Search',
+  prefixIcon: Icon(
+    PlatformInfo.isIOS ? CupertinoIcons.search : Icons.search,
+  ),
+  suffixIcon: IconButton(
+    icon: Icon(
+      PlatformInfo.isIOS ? CupertinoIcons.clear : Icons.clear,
+    ),
+    onPressed: () {
+      // Clear text
+    },
+  ),
+)
+
+// Password field
+AdaptiveTextField(
+  placeholder: 'Enter password',
+  obscureText: true,
+  prefixIcon: Icon(
+    PlatformInfo.isIOS ? CupertinoIcons.lock : Icons.lock,
+  ),
+)
+
+// Multiline text field
+AdaptiveTextField(
+  placeholder: 'Enter description',
+  maxLines: 5,
+  minLines: 3,
+  keyboardType: TextInputType.multiline,
+)
+</code></pre>
+<p><strong>iOS</strong>: Uses <code>CupertinoTextField</code> with tertiarySystemBackground color and rounded corners.
+<strong>Android</strong>: Uses Material <code>TextField</code> with outlined border.</p>
+<h3 id="adaptivetextformfield" class="hash-header">AdaptiveTextFormField <a href="#adaptivetextformfield" class="hash-link">#</a></h3>
+<pre><code class="language-dart">// Form with validation
+Form(
+  key: _formKey,
+  child: Column(
+    children: [
+      AdaptiveTextFormField(
+        placeholder: 'Email',
+        keyboardType: TextInputType.emailAddress,
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter your email';
+          }
+          if (!value.contains('@')) {
+            return 'Please enter a valid email';
+          }
+          return null;
+        },
+        onSaved: (value) =&gt; _email = value,
+      ),
+      AdaptiveButton(
+        onPressed: () {
+          if (_formKey.currentState!.validate()) {
+            _formKey.currentState!.save();
+            // Process form
+          }
+        },
+        label: 'Submit',
+      ),
+    ],
+  ),
+)
+</code></pre>
+<p><strong>iOS</strong>: Uses custom <code>FormField</code> wrapper with <code>CupertinoTextField</code> for proper validation with error display.
+<strong>Android</strong>: Uses Material <code>TextFormField</code>.</p>
+<h3 id="adaptivefloatingactionbutton" class="hash-header">AdaptiveFloatingActionButton <a href="#adaptivefloatingactionbutton" class="hash-link">#</a></h3>
+<pre><code class="language-dart">// Basic floating action button
+AdaptiveFloatingActionButton(
+  onPressed: () {},
+  child: Icon(Icons.add),
+)
+
+// Mini FAB
+AdaptiveFloatingActionButton(
+  onPressed: () {},
+  mini: true,
+  child: Icon(Icons.edit),
+)
+
+// Custom colors
+AdaptiveFloatingActionButton(
+  onPressed: () {},
+  backgroundColor: Colors.red,
+  foregroundColor: Colors.white,
+  child: Icon(Icons.favorite),
+)
+</code></pre>
+<p><strong>iOS</strong>: Circular button with custom shadow effects.
+<strong>Android</strong>: Material <code>FloatingActionButton</code> with elevation.</p>
+<h3 id="adaptiveformsection" class="hash-header">AdaptiveFormSection <a href="#adaptiveformsection" class="hash-link">#</a></h3>
+<pre><code class="language-dart">// Basic form section
+AdaptiveFormSection(
+  header: Text('Personal Information'),
+  footer: Text('Please provide accurate information'),
+  children: [
+    CupertinoFormRow(
+      prefix: Text('Name'),
+      child: AdaptiveTextField(placeholder: 'Enter name'),
+    ),
+    CupertinoFormRow(
+      prefix: Text('Email'),
+      child: AdaptiveTextField(placeholder: 'Enter email'),
+    ),
+  ],
+)
+
+// Inset grouped style
+AdaptiveFormSection.insetGrouped(
+  header: Text('Settings'),
+  children: [
+    CupertinoFormRow(
+      prefix: Text('Notifications'),
+      child: AdaptiveSwitch(value: true, onChanged: (v) {}),
+    ),
+  ],
+)
+</code></pre>
+<p><strong>iOS</strong>: Uses <code>CupertinoFormSection</code> with native iOS styling.
+<strong>Android</strong>: Uses Material <code>Card</code> with similar grouped layout.</p>
+<h3 id="adaptiveexpansiontile" class="hash-header">AdaptiveExpansionTile <a href="#adaptiveexpansiontile" class="hash-link">#</a></h3>
+<pre><code class="language-dart">// Basic expansion tile
+AdaptiveExpansionTile(
+  title: Text('Settings'),
+  children: [
+    ListTile(title: Text('Option 1')),
+    ListTile(title: Text('Option 2')),
+  ],
+)
+
+// With leading and subtitle
+AdaptiveExpansionTile(
+  leading: Icon(Icons.settings),
+  title: Text('Advanced Settings'),
+  subtitle: Text('Configure advanced options'),
+  initiallyExpanded: true,
+  children: [
+    ListTile(title: Text('Option 1')),
+    ListTile(title: Text('Option 2')),
+  ],
+)
+
+// With custom colors
+AdaptiveExpansionTile(
+  title: Text('Premium Features'),
+  backgroundColor: Colors.amber.withValues(alpha: 0.1),
+  iconColor: Colors.amber,
+  onExpansionChanged: (expanded) {
+    print('Expanded: $expanded');
+  },
+  children: [
+    ListTile(title: Text('Feature 1')),
+    ListTile(title: Text('Feature 2')),
+  ],
+)
+</code></pre>
+<p><strong>iOS</strong>: Modern custom design with rounded corners, smooth shadows, animated chevron, and gradient separator.
+<strong>Android</strong>: Material <code>ExpansionTile</code> with InkWell effects.</p>
+<h3 id="adaptivetabbarview" class="hash-header">AdaptiveTabBarView <a href="#adaptivetabbarview" class="hash-link">#</a></h3>
+<p>Horizontal swipeable tab view with tabs at the top.</p>
+<pre><code class="language-dart">// Tab bar view at the top
+AdaptiveTabBarView(
+  tabs: ['Latest', 'Popular', 'Trending'],
+  children: [
+    LatestPage(),
+    PopularPage(),
+    TrendingPage(),
+  ],
+  onTabChanged: (index) {
+    print('Tab changed to: $index');
+  },
+)
+</code></pre>
+<p><strong>iOS</strong>: Uses <code>CupertinoSlidingSegmentedControl</code> for tab selection.
+<strong>Android</strong>: Uses Material <code>TabBar</code> + <code>TabBarView</code>.</p>
+<h2 id="usage" class="hash-header">Usage <a href="#usage" class="hash-link">#</a></h2>
+<h3 id="button-styles" class="hash-header">Button Styles <a href="#button-styles" class="hash-link">#</a></h3>
+<pre><code class="language-dart">// Filled button (primary action)
+AdaptiveButton(
+  onPressed: () {},
+  style: AdaptiveButtonStyle.filled,
+  label: 'Filled',
+)
+
+// Tinted button (secondary action)
+AdaptiveButton(
+  onPressed: () {},
+  style: AdaptiveButtonStyle.tinted,
+  label: 'Tinted',
+)
+
+// Gray button (neutral action)
+AdaptiveButton(
+  onPressed: () {},
+  style: AdaptiveButtonStyle.gray,
+  label: 'Gray',
+)
+
+// Bordered button
+AdaptiveButton(
+  onPressed: () {},
+  style: AdaptiveButtonStyle.bordered,
+  label: 'Bordered',
+)
+
+// Plain text button
+AdaptiveButton(
+  onPressed: () {},
+  style: AdaptiveButtonStyle.plain,
+  label: 'Plain',
+)
+</code></pre>
+<h3 id="button-sizes" class="hash-header">Button Sizes <a href="#button-sizes" class="hash-link">#</a></h3>
+<pre><code class="language-dart">// Small button (28pt height on iOS)
+AdaptiveButton(
+  onPressed: () {},
+  size: AdaptiveButtonSize.small,
+  label: 'Small',
+)
+
+// Medium button (36pt height on iOS) - default
+AdaptiveButton(
+  onPressed: () {},
+  size: AdaptiveButtonSize.medium,
+  label: 'Medium',
+)
+
+// Large button (44pt height on iOS)
+AdaptiveButton(
+  onPressed: () {},
+  size: AdaptiveButtonSize.large,
+  label: 'Large',
+)
+</code></pre>
+<h3 id="custom-styling" class="hash-header">Custom Styling <a href="#custom-styling" class="hash-link">#</a></h3>
+<pre><code class="language-dart">AdaptiveButton(
+  onPressed: () {},
+  label: 'Custom Button',
+  color: Colors.red,
+  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+  borderRadius: BorderRadius.circular(16),
+  minSize: Size(200, 50),
+)
+</code></pre>
+<h3 id="disabled-state" class="hash-header">Disabled State <a href="#disabled-state" class="hash-link">#</a></h3>
+<pre><code class="language-dart">AdaptiveButton(
+  onPressed: () {},
+  label: 'Disabled',
+  enabled: false,
+)
+</code></pre>
+<h2 id="platform-detection" class="hash-header">Platform Detection <a href="#platform-detection" class="hash-link">#</a></h2>
+<p>Use the <code>PlatformInfo</code> utility class to check platform and iOS version:</p>
+<pre><code class="language-dart">import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
+
+// Check platform
+if (PlatformInfo.isIOS) {
+  print('Running on iOS');
+}
+
+if (PlatformInfo.isAndroid) {
+  print('Running on Android');
+}
+
+// Check iOS version
+if (PlatformInfo.isIOS26OrHigher()) {
+  print('Using iOS 26+ features');
+}
+
+if (PlatformInfo.isIOS18OrLower()) {
+  print('Using legacy iOS widgets');
+}
+
+// Get iOS version number
+int version = PlatformInfo.iOSVersion; // e.g., 26
+
+// Check version range
+if (PlatformInfo.isIOSVersionInRange(24, 26)) {
+  print('iOS version is between 24 and 26');
+}
+
+// Get platform description
+String description = PlatformInfo.platformDescription; // e.g., "iOS 26"
+</code></pre>
+<h2 id="installation" class="hash-header">Installation <a href="#installation" class="hash-link">#</a></h2>
+<p>Add this to your package's <code>pubspec.yaml</code> file:</p>
+<pre><code class="language-yaml">dependencies:
+  adaptive_platform_ui: ^0.1.0
+</code></pre>
+<p>Then run:</p>
+<pre><code class="language-bash">flutter pub get
+</code></pre>
+<h2 id="quick-start" class="hash-header">Quick Start <a href="#quick-start" class="hash-link">#</a></h2>
+<h3 id="adaptiveapp---platform-specific-app-configuration" class="hash-header">AdaptiveApp - Platform-Specific App Configuration <a href="#adaptiveapp---platform-specific-app-configuration" class="hash-link">#</a></h3>
+<p>Use <code>AdaptiveApp</code> to automatically configure your app for each platform:</p>
+<pre><code class="language-dart">import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AdaptiveApp(
+      title: 'My App',
+      themeMode: ThemeMode.system,
+      materialLightTheme: ThemeData.light(),
+      materialDarkTheme: ThemeData.dark(),
+      cupertinoLightTheme: const CupertinoThemeData(
+        brightness: Brightness.light,
+      ),
+      cupertinoDarkTheme: const CupertinoThemeData(
+        brightness: Brightness.dark,
+      ),
+      home: const HomePage(),
+    );
+  }
+}
+</code></pre>
+<p><strong>With Router Support (GoRouter, etc.):</strong></p>
+<pre><code class="language-dart">AdaptiveApp.router(
+  routerConfig: router,
+  title: 'My App',
+  themeMode: ThemeMode.system,
+  materialLightTheme: ThemeData.light(),
+  materialDarkTheme: ThemeData.dark(),
+  cupertinoLightTheme: const CupertinoThemeData(
+    brightness: Brightness.light,
+  ),
+  cupertinoDarkTheme: const CupertinoThemeData(
+    brightness: Brightness.dark,
+  ),
+)
+</code></pre>
+<p><strong>Key Features:</strong></p>
+<ul>
+<li>🎨 Separate themes for Material (Android) and Cupertino (iOS)</li>
+<li>🌓 Full theme mode support (light, dark, system)</li>
+<li>🔄 Automatic platform detection</li>
+<li>🚀 Router support via <code>AdaptiveApp.router()</code></li>
+<li>🛠️ Platform-specific callbacks for advanced configuration</li>
+</ul>
+<h2 id="ios-26-native-features" class="hash-header">iOS 26 Native Features <a href="#ios-26-native-features" class="hash-link">#</a></h2>
+<p>When running on iOS 26+, widgets automatically use <strong>native UIKit platform views</strong> with Liquid Glass design:</p>
+<h3 id="platform-architecture" class="hash-header">Platform Architecture <a href="#platform-architecture" class="hash-link">#</a></h3>
+<ul>
+<li><strong>Native UIKit Views</strong>: Uses <code>UiKitView</code> to render actual iOS 26 UIKit components</li>
+<li><strong>Platform Channels</strong>: Bidirectional communication between Flutter and native iOS code</li>
+<li><strong>Liquid Glass Design</strong>: Authentic iOS 26 visual effects rendered by UIKit</li>
+<li><strong>Zero Overhead</strong>: No custom painting or emulation - pure native rendering</li>
+</ul>
+<h3 id="visual-features" class="hash-header">Visual Features <a href="#visual-features" class="hash-link">#</a></h3>
+<ul>
+<li><strong>Modern corner radius</strong>: Native iOS 26 design language</li>
+<li><strong>Dynamic shadows</strong>: Subtle multi-layer shadows</li>
+<li><strong>Spring animations</strong>: Smooth spring damping with 0.95x scale on press</li>
+<li><strong>Native color system</strong>: Uses iOS system colors with proper light/dark mode support</li>
+<li><strong>Liquid Glass effects</strong>: Native iOS 26 translucency and blur effects</li>
+<li><strong>SF Symbols</strong>: Native SF Symbol rendering with hierarchical color support</li>
+</ul>
+<h3 id="interaction" class="hash-header">Interaction <a href="#interaction" class="hash-link">#</a></h3>
+<ul>
+<li><strong>Press states</strong>: Visual feedback with scale animation</li>
+<li><strong>Gesture handling</strong>: Native UIKit gesture recognizers</li>
+<li><strong>Haptic feedback</strong>: Medium impact feedback on interactions</li>
+<li><strong>Disabled states</strong>: Proper opacity and interaction blocking</li>
+</ul>
+<h3 id="typography" class="hash-header">Typography <a href="#typography" class="hash-link">#</a></h3>
+<ul>
+<li><strong>SF Pro font</strong>: Native iOS system font with proper weights</li>
+<li><strong>Dynamic Type</strong>: Respects system font size settings</li>
+<li><strong>Weight</strong>: Appropriate font weights for each component</li>
+</ul>
+<h2 id="example-app" class="hash-header">Example App <a href="#example-app" class="hash-link">#</a></h2>
+<p>Run the example app to see all widgets in action:</p>
+<pre><code class="language-bash">cd example
+flutter run
+</code></pre>
+<p>The example app includes:</p>
+<ul>
+<li>Platform information display</li>
+<li>All widget types showcase</li>
+<li>Interactive demos</li>
+<li>Style and size comparisons</li>
+<li>Dark mode support</li>
+</ul>
+<h3 id="ios26nativesearchtabbar-experimental-do-not-confuse-it-with-a-different-widget-adaptivebottomnavigationbar" class="hash-header">IOS26NativeSearchTabBar (EXPERIMENTAL) (Do not confuse it with a different widget, AdaptiveBottomNavigationBar.) <a href="#ios26nativesearchtabbar-experimental-do-not-confuse-it-with-a-different-widget-adaptivebottomnavigationbar" class="hash-link">#</a></h3>
+<p>⚠️ <strong>WARNING: This is a highly experimental feature with significant limitations. Only use for prototyping and demos.</strong></p>
+<p>Native iOS 26+ search tab bar with UITabBarController that transforms the tab bar into a search bar when the search tab is selected.</p>
+<pre><code class="language-dart">import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
+
+// Enable native search tab bar
+await IOS26NativeSearchTabBar.enable(
+  tabs: [
+    const NativeTabConfig(
+      title: 'Home',
+      sfSymbol: 'house.fill',
+    ),
+    const NativeTabConfig(
+      title: 'Search',
+      sfSymbol: 'magnifyingglass',
+      isSearchTab: true, // This tab transforms into search
+    ),
+    const NativeTabConfig(
+      title: 'Profile',
+      sfSymbol: 'person.fill',
+    ),
+  ],
+  selectedIndex: 0,
+  onTabSelected: (index) {
+    print('Tab selected: $index');
+  },
+  onSearchQueryChanged: (query) {
+    print('Search query: $query');
+  },
+  onSearchSubmitted: (query) {
+    print('Search submitted: $query');
+  },
+  onSearchCancelled: () {
+    print('Search cancelled');
+  },
+);
+
+// Disable when done
+await IOS26NativeSearchTabBar.disable();
+
+// Programmatically show search
+await IOS26NativeSearchTabBar.showSearch();
+</code></pre>
+<p><strong>Features:</strong></p>
+<ul>
+<li>✨ Native UITabBarController integration</li>
+<li>🔍 Search tab transforms into UISearchController</li>
+<li>💎 iOS 26+ Liquid Glass effects</li>
+<li>🎯 Method channel communication</li>
+<li>📱 Native animations and gestures</li>
+</ul>
+<p><strong>Known Issues &amp; Limitations:</strong></p>
+<p>This feature replaces Flutter's root view controller with a native UITabBarController, which creates fundamental architectural conflicts:</p>
+<ol>
+<li><strong>Widget Lifecycle</strong>: <code>initState</code>, <code>dispose</code>, and other lifecycle methods may not work correctly</li>
+<li><strong>Navigation Stack</strong>: <code>Navigator.pop()</code> and related methods become unreliable</li>
+<li><strong>State Management</strong>: Provider, Riverpod, Bloc, etc. may lose state or behave unpredictably</li>
+<li><strong>Hot Reload</strong>: Does not work properly - requires full app restart</li>
+<li><strong>Memory Leaks</strong>: Potential memory management issues between Flutter and UIKit</li>
+<li><strong>Gesture Conflicts</strong>: Native and Flutter gestures may interfere with each other</li>
+<li><strong>Frame Synchronization</strong>: Potential visual stuttering during transitions</li>
+</ol>
+<p><strong>Why These Issues Occur:</strong></p>
+<p>The feature attempts to merge two incompatible architectural philosophies:</p>
+<ul>
+<li><strong>Flutter</strong>: Single-threaded, declarative, expects to own entire screen</li>
+<li><strong>UIKit</strong>: Multi-threaded, imperative, view controller-based</li>
+</ul>
+<p>When UITabBarController becomes root, Flutter engine still believes it owns the screen, creating a parent-child relationship neither framework was designed to handle.</p>
+<p><strong>Recommendation:</strong></p>
+<ul>
+<li>✅ Use for prototyping and concept validation</li>
+<li>✅ Use for demos and presentations</li>
+<li>❌ Do NOT use in production apps</li>
+<li>❌ Do NOT rely on Flutter navigation when active</li>
+<li>❌ Do NOT expect hot reload to work</li>
+</ul>
+<p>For production apps, use Flutter's built-in <code>TabBar</code> or implement search within the existing navigation structure.</p>
+<p>See the example app's Native Search Tab demo page for detailed technical explanation.</p>
+<hr>
+<h2 id="widget-catalog" class="hash-header">Widget Catalog <a href="#widget-catalog" class="hash-link">#</a></h2>
+<p>Currently available adaptive widgets:</p>
+<ul>
+<li>✅ <strong>AdaptiveApp</strong> - Platform-specific app configuration with theme support and router</li>
+<li>✅ <strong>AdaptiveAppBar</strong> - Centralized app bar configuration with custom navigation bar support</li>
+<li>✅ <strong>AdaptiveBottomNavigationBar</strong> - Centralized bottom navigation configuration with custom tab bar support</li>
+<li>✅ <strong>AdaptiveScaffold</strong> - Scaffold with optional native iOS 26 toolbar and tab bar</li>
+<li>✅ <strong>AdaptiveButton</strong> - Buttons with iOS 26+ native designs</li>
+<li>✅ <strong>AdaptiveSegmentedControl</strong> - Native segmented controls</li>
+<li>✅ <strong>AdaptiveSwitch</strong> - Native switches</li>
+<li>✅ <strong>AdaptiveSlider</strong> - Native sliders</li>
+<li>✅ <strong>AdaptiveCheckbox</strong> - Checkboxes with adaptive styling</li>
+<li>✅ <strong>AdaptiveRadio</strong> - Radio button groups with adaptive styling</li>
+<li>✅ <strong>AdaptiveCard</strong> - Cards with platform-specific styling</li>
+<li>✅ <strong>AdaptiveBadge</strong> - Notification badges with adaptive styling</li>
+<li>✅ <strong>AdaptiveTooltip</strong> - Platform-specific tooltips</li>
+<li>✅ <strong>AdaptiveSnackBar</strong> - Platform-specific notification snackbars</li>
+<li>✅ <strong>AdaptiveAlertDialog</strong> - Native alert dialogs with text input support</li>
+<li>✅ <strong>AdaptiveContextMenu</strong> - Long-press context menus with platform-specific styling</li>
+<li>✅ <strong>AdaptivePopupMenuButton</strong> - Native popup menus</li>
+<li>✅ <strong>AdaptiveDatePicker</strong> - Platform-specific date selection dialogs</li>
+<li>✅ <strong>AdaptiveTimePicker</strong> - Platform-specific time selection dialogs</li>
+<li>✅ <strong>AdaptiveListTile</strong> - Platform-specific list item tiles</li>
+<li>✅ <strong>AdaptiveTextField</strong> - Platform-specific text input fields</li>
+<li>✅ <strong>AdaptiveTextFormField</strong> - Platform-specific form fields with validation</li>
+<li>✅ <strong>AdaptiveFloatingActionButton</strong> - Platform-specific circular action buttons</li>
+<li>✅ <strong>AdaptiveFormSection</strong> - Grouped form sections with headers and footers</li>
+<li>✅ <strong>AdaptiveExpansionTile</strong> - Modern expandable/collapsible content</li>
+<li>✅ <strong>AdaptiveTabBarView</strong> - Horizontal swipeable tab bar view</li>
+<li>⚠️ <strong>IOS26NativeSearchTabBar</strong> - EXPERIMENTAL native search tab bar (iOS 26+ only)</li>
+</ul>
+<h2 id="design-philosophy" class="hash-header">Design Philosophy <a href="#design-philosophy" class="hash-link">#</a></h2>
+<p>This package follows Apple's Human Interface Guidelines for iOS and Material Design guidelines for Android. The goal is to provide:</p>
+<ol>
+<li><strong>Native Look &amp; Feel</strong>: Widgets that feel at home on each platform</li>
+<li><strong>Zero Configuration</strong>: Automatic platform detection and adaptation</li>
+<li><strong>Version Awareness</strong>: Leverage new platform features while maintaining backward compatibility</li>
+<li><strong>Consistency</strong>: Unified API across platforms</li>
+<li><strong>Customization</strong>: Allow overrides when needed</li>
+</ol>
+<h2 id="ios-version-support" class="hash-header">iOS Version Support <a href="#ios-version-support" class="hash-link">#</a></h2>
+<ul>
+<li><strong>iOS 26+</strong>: Modern native iOS 26 designs</li>
+<li><strong>iOS 18 and below</strong>: Traditional Cupertino widgets</li>
+<li><strong>Automatic fallback</strong>: Seamless degradation for older versions</li>
+</ul>
+<h2 id="requirements" class="hash-header">Requirements <a href="#requirements" class="hash-link">#</a></h2>
+<ul>
+<li>Flutter SDK: &gt;=1.17.0</li>
+<li>Dart SDK: ^3.9.2</li>
+</ul>
+<h2 id="contributing" class="hash-header">Contributing <a href="#contributing" class="hash-link">#</a></h2>
+<p>Contributions are welcome! Please feel free to submit a Pull Request.</p>
+<h2 id="license" class="hash-header">License <a href="#license" class="hash-link">#</a></h2>
+<p>This project is licensed under the MIT License - see the <a href="https://github.com/berkaycatak/adaptive_platform_ui/blob/main/LICENSE" rel="ugc">LICENSE</a> file for details.</p>
+<h2 id="acknowledgments" class="hash-header">Acknowledgments <a href="#acknowledgments" class="hash-link">#</a></h2>
+<ul>
+<li>Inspired by cupertino_native</li>
+<li>Design guidelines from Apple's Human Interface Guidelines</li>
+<li>Material Design guidelines from Google</li>
+</ul>
+<h2 id="contributors" class="hash-header">Contributors <a href="#contributors" class="hash-link">#</a></h2>
+<p>Thanks to all contributors who helped improve this package!</p>
+<a href="https://github.com/berkaycatak/adaptive_platform_ui/graphs/contributors" rel="ugc">
+<img src="https://external-images.pub.dev/nPs8Wmpl3jqKxFozNCvZltYWnIB5Cp3yz8NkckHHJsE%3D/1777593600000/https%3A%2F%2Fcontrib.rocks%2Fimage%3Frepo%3Dberkaycatak%2Fadaptive_platform_ui">
+</a>
+<h2 id="author" class="hash-header">Author <a href="#author" class="hash-link">#</a></h2>
+<p>Berkay Çatak</p>
+<h2 id="support" class="hash-header">Support <a href="#support" class="hash-link">#</a></h2>
+<ul>
+<li>💬 <strong><a href="https://github.com/berkaycatak/adaptive_platform_ui/discussions" rel="ugc">Discussions</a></strong> - Ask questions, share ideas, and showcase your projects</li>
+<li>🐛 <strong><a href="https://github.com/berkaycatak/adaptive_platform_ui/issues" rel="ugc">Issues</a></strong> - Report bugs and request features</li>
+<li>📖 <strong><a href="https://github.com/berkaycatak/adaptive_platform_ui/blob/main/.github/CONTRIBUTING.md" rel="ugc">Contributing Guide</a></strong> - Learn how to contribute</li>
+</ul>
+</section></div></div></div><aside class="detail-info-box"><a class="packages-scores" href="/packages/adaptive_platform_ui/score"><div class="packages-score packages-score-like" data-package="adaptive_platform_ui"><div class="packages-score-value -has-value"><span class="packages-score-value-number">287</span><span class="packages-score-value-sign"></span></div><div class="packages-score-label">likes</div></div><div class="packages-score packages-score-health"><div class="packages-score-value -has-value"><span class="packages-score-value-number">150</span><span class="packages-score-value-sign"></span></div><div class="packages-score-label">points</div></div><div class="packages-score packages-score-downloads" title="Number of downloads of this package during the past 30 days"><div class="packages-score-value -has-value"><span class="packages-score-value-number">6.63k</span><span class="packages-score-value-sign"></span></div><div class="packages-score-label">downloads</div></div></a><div class="detail-screenshot-thumbnail"><div class="thumbnail-container" data-thumbnail="/packages/adaptive_platform_ui/versions/0.1.105/gen-res/gen/img/liquid-glass-demo.webp" data-thumbnail-descriptions-json="[&quot;iOS 26+ liquid glass designs&quot;]" data-ga-click-event="screenshot-thumbnail-click"><img class="thumbnail-image" src="/packages/adaptive_platform_ui/versions/0.1.105/gen-res/gen/190x190/img/liquid-glass-demo.webp" alt="screenshot" title="View screenshots" tabindex="0"/></div><img class="collections-icon" src="/static/hash-fsujdolb/img/collections_white_24dp.svg" alt="" width="30" height="30" role="presentation"/></div><h3 class="title">Documentation</h3><p><a class="link" href="/documentation/adaptive_platform_ui/latest/">API reference</a><br/></p><h3 class="title">Publisher</h3><p><a href="/publishers/medialyra.com"><img class="-pub-publisher-shield filter-invert-on-dark" src="/static/hash-fsujdolb/img/material-icon-verified.svg" alt="verified publisher" width="14" height="14" title="Published by a pub.dev verified publisher"/>medialyra.com</a></p><h3 class="title">Weekly Downloads</h3><div id="-weekly-downloads-sparkline" class="weekly-downloads-sparkline" data-widget="weekly-sparkline" data-weekly-sparkline-points="AErxaaAGAAB9BwAAHQUAAEIFAAAzBAAAHQQAADYFAAAhBQAA4AQAAIoEAACxBAAAagQAAFYCAAC5AwAADQIAAGMCAADrAQAAMgEAAGEBAAAVAQAAVAEAADABAABwAQAAeAEAAFgBAABcAQAA+wEAAJwBAABWAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="></div><h3 class="title pkg-infobox-metadata">Metadata</h3><p>Adaptive platform-specific widgets for Flutter. Auto renders native iOS 26+ liquid glass designs, traditional Cupertino widgets for older iOS versions, Material Design for Android.</p><p><a class="link" href="https://github.com/berkaycatak/adaptive_platform_ui" rel="ugc">Repository (GitHub)</a><br/><a class="link" href="https://github.com/berkaycatak/adaptive_platform_ui/issues" rel="ugc">View&#47;report issues</a><br/></p><h3 class="title">License</h3><p><img class="inline-icon-img filter-invert-on-dark" src="/static/hash-fsujdolb/img/material-icon-balance.svg" alt="" width="14" height="14" role="presentation"/>MIT (<a href="/packages/adaptive_platform_ui/license">license</a>)</p><h3 class="title">Dependencies</h3><p><a href="https://api.flutter.dev/">flutter</a></p><h3 class="title">More</h3><p><a href="/packages?q=dependency%3Aadaptive_platform_ui" rel="nofollow">Packages that depend on adaptive_platform_ui</a><br/><br/><a href="/packages?q=implements-federated-plugin%3Aadaptive_platform_ui" rel="nofollow">Packages that implement adaptive_platform_ui</a></p></aside></div><script type="application/ld+json">{"@context":"http\u003a\u002f\u002fschema.org","@type":"SoftwareSourceCode","name":"adaptive\u005fplatform\u005fui","version":"0.1.105","description":"adaptive\u005fplatform\u005fui - Adaptive platform-specific widgets for Flutter. Auto renders native iOS 26\u002b liquid glass designs, traditional Cupertino widgets for older iOS versions, Material Design for Android.","url":"https\u003a\u002f\u002fpub.dev\u002fpackages\u002fadaptive\u005fplatform\u005fui","dateCreated":"2025-10-10T19\u003a45\u003a03.166217Z","dateModified":"2026-04-23T14\u003a51\u003a12.409479Z","programmingLanguage":"Dart","image":"https\u003a\u002f\u002fpub.dev\u002fstatic\u002fimg\u002fpub-dev-icon-cover-image.png","license":"https\u003a\u002f\u002fpub.dev\u002fpackages\u002fadaptive\u005fplatform\u005fui\u002flicense"}</script></div><div class="detail-metadata"><h3 class="detail-metadata-title"><span class="detail-metadata-toggle">←</span> Metadata</h3><div class="detail-info-box"><a class="packages-scores" href="/packages/adaptive_platform_ui/score"><div class="packages-score packages-score-like" data-package="adaptive_platform_ui"><div class="packages-score-value -has-value"><span class="packages-score-value-number">287</span><span class="packages-score-value-sign"></span></div><div class="packages-score-label">likes</div></div><div class="packages-score packages-score-health"><div class="packages-score-value -has-value"><span class="packages-score-value-number">150</span><span class="packages-score-value-sign"></span></div><div class="packages-score-label">points</div></div><div class="packages-score packages-score-downloads" title="Number of downloads of this package during the past 30 days"><div class="packages-score-value -has-value"><span class="packages-score-value-number">6.63k</span><span class="packages-score-value-sign"></span></div><div class="packages-score-label">downloads</div></div></a><div class="detail-screenshot-thumbnail"><div class="thumbnail-container" data-thumbnail="/packages/adaptive_platform_ui/versions/0.1.105/gen-res/gen/img/liquid-glass-demo.webp" data-thumbnail-descriptions-json="[&quot;iOS 26+ liquid glass designs&quot;]" data-ga-click-event="screenshot-thumbnail-click"><img class="thumbnail-image" src="/packages/adaptive_platform_ui/versions/0.1.105/gen-res/gen/190x190/img/liquid-glass-demo.webp" alt="screenshot" title="View screenshots" tabindex="0"/></div><img class="collections-icon" src="/static/hash-fsujdolb/img/collections_white_24dp.svg" alt="" width="30" height="30" role="presentation"/></div><h3 class="title">Documentation</h3><p><a class="link" href="/documentation/adaptive_platform_ui/latest/">API reference</a><br/></p><h3 class="title">Publisher</h3><p><a href="/publishers/medialyra.com"><img class="-pub-publisher-shield filter-invert-on-dark" src="/static/hash-fsujdolb/img/material-icon-verified.svg" alt="verified publisher" width="14" height="14" title="Published by a pub.dev verified publisher"/>medialyra.com</a></p><h3 class="title">Weekly Downloads</h3><div id="-weekly-downloads-sparkline" class="weekly-downloads-sparkline" data-widget="weekly-sparkline" data-weekly-sparkline-points="AErxaaAGAAB9BwAAHQUAAEIFAAAzBAAAHQQAADYFAAAhBQAA4AQAAIoEAACxBAAAagQAAFYCAAC5AwAADQIAAGMCAADrAQAAMgEAAGEBAAAVAQAAVAEAADABAABwAQAAeAEAAFgBAABcAQAA+wEAAJwBAABWAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="></div><h3 class="title pkg-infobox-metadata">Metadata</h3><p>Adaptive platform-specific widgets for Flutter. Auto renders native iOS 26+ liquid glass designs, traditional Cupertino widgets for older iOS versions, Material Design for Android.</p><p><a class="link" href="https://github.com/berkaycatak/adaptive_platform_ui" rel="ugc">Repository (GitHub)</a><br/><a class="link" href="https://github.com/berkaycatak/adaptive_platform_ui/issues" rel="ugc">View&#47;report issues</a><br/></p><h3 class="title">License</h3><p><img class="inline-icon-img filter-invert-on-dark" src="/static/hash-fsujdolb/img/material-icon-balance.svg" alt="" width="14" height="14" role="presentation"/>MIT (<a href="/packages/adaptive_platform_ui/license">license</a>)</p><h3 class="title">Dependencies</h3><p><a href="https://api.flutter.dev/">flutter</a></p><h3 class="title">More</h3><p><a href="/packages?q=dependency%3Aadaptive_platform_ui" rel="nofollow">Packages that depend on adaptive_platform_ui</a><br/><br/><a href="/packages?q=implements-federated-plugin%3Aadaptive_platform_ui" rel="nofollow">Packages that implement adaptive_platform_ui</a></p></div><p class="detail-lead-back"><a class="detail-metadata-toggle">Back</a></p></div><div id="-screenshot-carousel" class="carousel"><fab id="-carousel-prev" class="mdc-fab carousel-prev carousel-nav" data-mdc-auto-init="MDCRipple" title="Previous" data-ga-click-event="screenshot-carousel-prev-click" tabindex="0"><div class="mdc-fab__ripple"></div><img class="mdc-fab__icon" src="/static/hash-fsujdolb/img/keyboard_arrow_left.svg" alt="previous" width="24" height="24" aria-hidden="true"/></fab><div id="-image-container" class="image-container"></div><fab id="-carousel-next" class="mdc-fab carousel-next carousel-nav" data-mdc-auto-init="MDCRipple" title="Next" data-ga-click-event="screenshot-carousel-next-click" tabindex="0"><div class="mdc-fab__ripple"></div><img class="mdc-fab__icon" src="/static/hash-fsujdolb/img/keyboard_arrow_right.svg" alt="next" width="24" height="24" aria-hidden="true"/></fab><p id="-screenshot-description" class="screenshot-description"></p></div></main><footer class="site-footer"><a class="link" href="https://dart.dev/">Dart language</a><a class="link sep" href="/report?subject=package%3Aadaptive_platform_ui&amp;url=https%3A%2F%2Fpub.dev%2Fpackages%2Fadaptive_platform_ui">Report package</a><a class="link sep" href="/policy">Policy</a><a class="link sep" href="https://www.google.com/intl/en/policies/terms/">Terms</a><a class="link sep" href="https://developers.google.com/terms/">API Terms</a><a class="link sep" href="/security">Security</a><a class="link sep" href="https://www.google.com/intl/en/policies/privacy/">Privacy</a><a class="link sep" href="/help">Help</a><a class="link icon sep" href="/feed.atom"><img class="inline-icon" src="/static/hash-fsujdolb/img/rss-feed-icon.svg" alt="RSS" width="20" height="20" title="RSS/atom feed"/></a><a class="link icon github_issue" href="https://github.com/dart-lang/pub-dev/issues/new"><img class="inline-icon" src="/static/hash-fsujdolb/img/bug-report-white-96px.png" alt="bug report" width="20" height="20" title="Report an issue with this site"/></a></footer><script src="/static/hash-fsujdolb/highlight/highlight-with-init.js" defer="defer"></script></body></html>

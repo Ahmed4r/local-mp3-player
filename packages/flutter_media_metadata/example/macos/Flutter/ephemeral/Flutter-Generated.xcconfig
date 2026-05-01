@@ -1,6 +1,6 @@
 // This is a generated file; do not edit or check into version control.
 FLUTTER_ROOT=C:\flutterSdk\flutter
-FLUTTER_APPLICATION_PATH=C:\Users\ahmed\AndroidStudioProjects\local-mp3-player\packages\flutter_media_metadata\example
+FLUTTER_APPLICATION_PATH=C:\Users\ahmed\flutterProjects\local-mp3-player\packages\flutter_media_metadata\example
 COCOAPODS_PARALLEL_CODE_SIGN=true
 FLUTTER_BUILD_DIR=build
 FLUTTER_BUILD_NAME=1.0.0
