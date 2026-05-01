@@ -215,12 +215,13 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
 
   // ─── Ambient video options (radio — only one active at a time) ───────────
   static const List<_AmbientVideo> _ambientVideos = [
-    // _AmbientVideo(icon: Icons.water_drop_outlined,  label: 'Rain',   assetPath: 'assets/video/Rain.mp4'),
-    // _AmbientVideo(
-    //   icon: Icons.air_rounded,
-    //   label: 'Wind',
-    //   assetPath: 'assets/video/Wind.mp4',
-    // ),
+    // _AmbientVideo(icon: Icons.water_drop_outlined,  label: 'Rain',   assetPath: 'assets/video/rain.mp4'),
+    _AmbientVideo(
+      icon: Icons.air_rounded,
+      label: 'Wind',
+      assetPath:
+          'assets/video/wind.mp4', // 👈 CHANGED: 'Wind.mp4' to 'wind.mp4'
+    ),
     _AmbientVideo(
       icon: Icons.water_rounded,
       label: 'Ocean',
@@ -231,7 +232,7 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
       label: 'Forest',
       assetPath: 'assets/video/forest.mp4',
     ),
-    // _AmbientVideo(icon: Icons.fireplace_rounded,     label: 'Fire',   assetPath: 'assets/video/Fire.mp4'),
+    // _AmbientVideo(icon: Icons.fireplace_rounded,     label: 'Fire',   assetPath: 'assets/video/fire.mp4'),
     _AmbientVideo(
       icon: Icons.nights_stay_rounded,
       label: 'Night',

@@ -2,9 +2,9 @@
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build-ios:
@@ -12,6 +12,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true # <-- THIS LINE downloads your .mp4 files correctly
 
       - name: Install Flutter
         uses: subosito/flutter-action@v2
@@ -33,26 +35,26 @@ jobs:
       - name: Aggressive Code Signing Removal
         run: |
           PBXPROJ="ios/Runner.xcodeproj/project.pbxproj"
-          
+
           # Backup original
           cp "$PBXPROJ" "${PBXPROJ}.backup"
-          
+
           # Remove all DEVELOPMENT_TEAM lines
           sed -i '' '/DEVELOPMENT_TEAM/d' "$PBXPROJ"
-          
+
           # Remove all CODE_SIGN_IDENTITY lines  
           sed -i '' '/CODE_SIGN_IDENTITY/d' "$PBXPROJ"
-          
+
           # Remove all PROVISIONING_PROFILE lines
           sed -i '' '/PROVISIONING_PROFILE/d' "$PBXPROJ"
-          
+
           # Remove CODE_SIGN_STYLE
           sed -i '' '/CODE_SIGN_STYLE/d' "$PBXPROJ"
-          
+
           # Add CODE_SIGNING_ALLOWED and CODE_SIGNING_REQUIRED to buildSettings
           awk '/buildSettings = {/ && !done {print; print "\t\t\t\tCODE_SIGNING_ALLOWED = NO;"; print "\t\t\t\tCODE_SIGNING_REQUIRED = NO;"; done=1; next}1' "$PBXPROJ" > "${PBXPROJ}.tmp"
           mv "${PBXPROJ}.tmp" "$PBXPROJ"
-          
+
           # Do it again for all buildSettings occurrences
           perl -i -pe 's/(buildSettings = \{)/$1\n\t\t\t\tCODE_SIGNING_ALLOWED = NO;\n\t\t\t\tCODE_SIGNING_REQUIRED = NO;/g' "$PBXPROJ"
 
@@ -89,12 +91,12 @@ jobs:
         run: |
           # Find the .app bundle
           APP_PATH=$(find build/ios -name "*.app" | head -n 1)
-          
+
           if [ -z "$APP_PATH" ]; then
             echo "Error: No .app bundle found"
             exit 1
           fi
-          
+
           mkdir -p Payload
           cp -r "$APP_PATH" Payload/
           zip -r FlutterIpaExport.ipa Payload
