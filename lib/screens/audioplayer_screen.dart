@@ -16,9 +16,18 @@ import 'package:video_player/video_player.dart';
 
 final AudioPlayer globalAudioPlayer = AudioPlayer();
 
-// ─── iOS 26 Liquid Glass helper ─────────────────────────────────────────────
-// Uses a stronger blur + subtle white border to mimic the new visionOS-inspired
-// "Liquid Glass" material introduced in iOS 26.
+// ─── iOS 26 Liquid Glass ─────────────────────────────────────────────────────
+// Replicates Apple's Liquid Glass material as closely as possible in Flutter:
+//
+//  Layer 1 — strong backdrop blur (lensing simulation)
+//  Layer 2 — very low opacity white fill (20-30%)
+//  Layer 3 — specular gradient: bright top-left → transparent bottom-right
+//  Layer 4 — thin bright top border (light refraction edge)
+//  Layer 5 — subtle inner shadow at bottom (depth)
+//
+// On iOS the blur sigma is higher because the GPU can handle it.
+// On Android we dial it back slightly to avoid jank.
+
 bool get _isIOS => Platform.isIOS;
 
 class _LiquidGlass extends StatelessWidget {
@@ -28,6 +37,7 @@ class _LiquidGlass extends StatelessWidget {
     this.borderRadius,
     this.blurSigma,
     this.fillOpacity,
+    this.tintColor,
   });
 
   final Widget child;
@@ -35,39 +45,76 @@ class _LiquidGlass extends StatelessWidget {
   final BorderRadiusGeometry? borderRadius;
   final double? blurSigma;
   final double? fillOpacity;
+  final Color? tintColor; // optional color tint sampled from album art
 
   @override
   Widget build(BuildContext context) {
-    final radius = borderRadius ?? BorderRadius.circular(28.r);
-    // iOS 26 glass is more transparent and has a stronger blur than the
-    // traditional frosted glass style.
-    final sigma = blurSigma ?? (_isIOS ? 40.0 : 24.0);
-    final fill = fillOpacity ?? (_isIOS ? 0.12 : 0.18);
+    final radius = (borderRadius ?? BorderRadius.circular(28.r)) as BorderRadius;
+    final sigma = blurSigma ?? (_isIOS ? 60.0 : 32.0);
+    final fill = fillOpacity ?? 0.15;
+    final tint = tintColor ?? Colors.white;
 
     return ClipRRect(
-      borderRadius: radius as BorderRadius,
+      borderRadius: radius,
       child: BackdropFilter(
+        // Strong blur = lensing simulation (bending light behind the glass)
         filter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
         child: Container(
           padding: padding ?? EdgeInsets.all(18.r),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(fill),
             borderRadius: radius,
-            border: Border.all(
-              color: Colors.white.withOpacity(_isIOS ? 0.28 : 0.18),
-              width: _isIOS ? 1.0 : 1.5,
+            // Layer 2: very subtle white/tint base fill
+            color: tint.withOpacity(fill),
+            // Layer 3 + 4: specular highlight gradient
+            // Top-left corner catches the "light" — mimics real glass refraction
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              stops: const [0.0, 0.18, 0.5, 1.0],
+              colors: [
+                Colors.white.withOpacity(0.38), // specular bright edge
+                Colors.white.withOpacity(0.16), // fading highlight
+                tint.withOpacity(fill * 0.8),   // mid tint
+                tint.withOpacity(fill * 0.4),   // dark corner
+              ],
             ),
-            // Subtle inner highlight — the iOS 26 "specular edge" effect
-            gradient: _isIOS
-                ? LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.white.withOpacity(0.22),
-                      Colors.white.withOpacity(0.06),
-                    ],
-                  )
-                : null,
+            border: Border(
+              // Top bright border = light catching the top rim of the glass
+              top: BorderSide(
+                color: Colors.white.withOpacity(0.55),
+                width: 1.0,
+              ),
+              // Left faint border
+              left: BorderSide(
+                color: Colors.white.withOpacity(0.30),
+                width: 0.8,
+              ),
+              // Bottom & right = shadow edge (less light)
+              bottom: BorderSide(
+                color: Colors.white.withOpacity(0.08),
+                width: 0.5,
+              ),
+              right: BorderSide(
+                color: Colors.white.withOpacity(0.08),
+                width: 0.5,
+              ),
+            ),
+            boxShadow: [
+              // Outer glow — glass panels float
+              BoxShadow(
+                color: Colors.black.withOpacity(0.22),
+                blurRadius: 32,
+                spreadRadius: -4,
+                offset: const Offset(0, 8),
+              ),
+              // Inner top highlight (simulates light entering glass from top)
+              BoxShadow(
+                color: Colors.white.withOpacity(0.10),
+                blurRadius: 1,
+                spreadRadius: 0,
+                offset: const Offset(0, 1),
+              ),
+            ],
           ),
           child: child,
         ),
@@ -181,36 +228,12 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
 
   // ─── Ambient video options (radio — only one active at a time) ───────────
   static const List<_AmbientVideo> _ambientVideos = [
-    _AmbientVideo(
-      icon: Icons.water_drop_outlined,
-      label: 'Rain',
-      assetPath: 'assets/video/rain.mp4',
-    ),
-    _AmbientVideo(
-      icon: Icons.air_rounded,
-      label: 'Wind',
-      assetPath: 'assets/video/wind.mp4',
-    ),
-    _AmbientVideo(
-      icon: Icons.water_rounded,
-      label: 'Ocean',
-      assetPath: 'assets/video/ocean.mp4',
-    ),
-    _AmbientVideo(
-      icon: Icons.forest_rounded,
-      label: 'Forest',
-      assetPath: 'assets/video/forest.mp4',
-    ),
-    _AmbientVideo(
-      icon: Icons.fireplace_rounded,
-      label: 'Fire',
-      assetPath: 'assets/video/fire.mp4',
-    ),
-    _AmbientVideo(
-      icon: Icons.nights_stay_rounded,
-      label: 'Night',
-      assetPath: 'assets/video/night.mp4',
-    ),
+    _AmbientVideo(icon: Icons.water_drop_outlined,  label: 'Rain',   assetPath: 'assets/video/rain.mp4'),
+    _AmbientVideo(icon: Icons.air_rounded,           label: 'Wind',   assetPath: 'assets/video/wind.mp4'),
+    _AmbientVideo(icon: Icons.water_rounded,         label: 'Ocean',  assetPath: 'assets/video/ocean.mp4'),
+    _AmbientVideo(icon: Icons.forest_rounded,        label: 'Forest', assetPath: 'assets/video/forest.mp4'),
+    _AmbientVideo(icon: Icons.fireplace_rounded,     label: 'Fire',   assetPath: 'assets/video/fire.mp4'),
+    _AmbientVideo(icon: Icons.nights_stay_rounded,   label: 'Night',  assetPath: 'assets/video/night.mp4'),
   ];
 
   /// Index into [_ambientVideos] of the currently playing video, or -1 = none.
@@ -258,13 +281,10 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
       parent: _ambientController,
       curve: Curves.easeOut,
     );
-    _ambientSlide = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
-        .animate(
-          CurvedAnimation(
-            parent: _ambientController,
-            curve: Curves.easeOutCubic,
-          ),
-        );
+    _ambientSlide = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _ambientController, curve: Curves.easeOutCubic));
 
     _loadFavorites();
   }
@@ -339,9 +359,7 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
   }
 
   Future<void> _extractThemeColors(Uint8List imageBytes) async {
-    final palette = await PaletteGenerator.fromImageProvider(
-      MemoryImage(imageBytes),
-    );
+    final palette = await PaletteGenerator.fromImageProvider(MemoryImage(imageBytes));
     if (mounted) {
       setState(() {
         _themeColor1 = palette.dominantColor?.color ?? const Color(0xFF3d7a8a);
@@ -379,8 +397,7 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
   void _toggleLoop() {
     setState(() => _isLooping = !_isLooping);
     _audioPlayer.setReleaseMode(
-      _isLooping ? ReleaseMode.loop : ReleaseMode.stop,
-    );
+        _isLooping ? ReleaseMode.loop : ReleaseMode.stop);
   }
 
   void _toggleShuffle() {
@@ -485,15 +502,7 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
   }
 
   String _stripExtension(String filename) {
-    const supported = {
-      '.mp3',
-      '.m4a',
-      '.wav',
-      '.flac',
-      '.aac',
-      '.ogg',
-      '.opus',
-    };
+    const supported = {'.mp3', '.m4a', '.wav', '.flac', '.aac', '.ogg', '.opus'};
     for (final ext in supported) {
       if (filename.toLowerCase().endsWith(ext)) {
         return filename.substring(0, filename.length - ext.length);
@@ -505,21 +514,19 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
 
   void _showSnack(String message) {
     final mq = MediaQuery.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 1),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.white.withOpacity(0.12),
-        elevation: 0,
-        margin: EdgeInsets.only(
-          bottom: mq.size.height - mq.padding.top - 120,
-          left: 16,
-          right: 16,
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+      duration: const Duration(seconds: 1),
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: Colors.white.withOpacity(0.12),
+      elevation: 0,
+      margin: EdgeInsets.only(
+        bottom: mq.size.height - mq.padding.top - 120,
+        left: 16,
+        right: 16,
       ),
-    );
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    ));
   }
 
   // ─── Build ────────────────────────────────────────────────────────────────
@@ -532,11 +539,7 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
       backgroundColor: Colors.black,
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(
-            Icons.keyboard_arrow_down_rounded,
-            size: 32.r,
-            color: Colors.white,
-          ),
+          icon: Icon(Icons.keyboard_arrow_down_rounded, size: 32.r, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         backgroundColor: Colors.transparent,
@@ -588,7 +591,7 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
                   const Spacer(),
 
                   // Album art
-                  // _buildAlbumArt(),
+                  _buildAlbumArt(),
 
                   SizedBox(height: 20.h),
 
@@ -621,24 +624,18 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
   Widget _buildAlbumArt() {
     final size = MediaQuery.of(context).size.width * 0.82;
     Widget art = _albumImageBytes != null
-        ? Image.memory(
-            _albumImageBytes!,
-            width: size,
-            height: size * 0.75,
-            fit: BoxFit.cover,
-          )
+        ? Image.memory(_albumImageBytes!, width: size, height: size * 0.75, fit: BoxFit.cover)
         : Container(
             width: size,
             height: size * 0.75,
             color: Colors.white10,
-            child: Icon(
-              Icons.music_note_rounded,
-              size: 72.r,
-              color: Colors.white24,
-            ),
+            child: Icon(Icons.music_note_rounded, size: 72.r, color: Colors.white24),
           );
 
-    return ClipRRect(borderRadius: BorderRadius.circular(20.r), child: art);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20.r),
+      child: art,
+    );
   }
 
   // ─── Main Player Card (the glassy card at bottom of image) ───────────────
@@ -646,6 +643,7 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
   Widget _buildMainPlayerCard() {
     return _LiquidGlass(
       padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 16.h),
+      tintColor: _themeColor1,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -658,9 +656,7 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      audioTitle.contains('.')
-                          ? _stripExtension(audioTitle)
-                          : audioTitle,
+                      audioTitle.contains('.') ? _stripExtension(audioTitle) : audioTitle,
                       style: GoogleFonts.inter(
                         color: Colors.white,
                         fontSize: 18.sp,
@@ -735,11 +731,7 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
               // Rewind
               GestureDetector(
                 onTap: _playPrevious,
-                child: Icon(
-                  Icons.fast_rewind_rounded,
-                  color: Colors.white,
-                  size: 30.r,
-                ),
+                child: Icon(Icons.fast_rewind_rounded, color: Colors.white, size: 30.r),
               ),
 
               // Play / Pause (large, central)
@@ -755,11 +747,7 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
               // Fast forward
               GestureDetector(
                 onTap: _playNext,
-                child: Icon(
-                  Icons.fast_forward_rounded,
-                  color: Colors.white,
-                  size: 30.r,
-                ),
+                child: Icon(Icons.fast_forward_rounded, color: Colors.white, size: 30.r),
               ),
 
               // Sleep / loop (moon-z icon in image)
@@ -799,11 +787,7 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        Icon(
-                          Icons.cloud_rounded,
-                          color: Colors.white,
-                          size: 18.r,
-                        ),
+                        Icon(Icons.cloud_rounded, color: Colors.white, size: 18.r),
                         Positioned(
                           bottom: 8.r,
                           child: Row(
@@ -831,11 +815,7 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
               // Playlist icon (right side)
               GestureDetector(
                 onTap: _openPlaylist,
-                child: Icon(
-                  Icons.format_list_bulleted_rounded,
-                  color: Colors.white70,
-                  size: 22.r,
-                ),
+                child: Icon(Icons.format_list_bulleted_rounded, color: Colors.white70, size: 22.r),
               ),
             ],
           ),
@@ -850,9 +830,8 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
     final maxMs = _totalDuration.inMilliseconds > 0
         ? _totalDuration.inMilliseconds.toDouble()
         : 1.0;
-    final curMs = _isSeeking
-        ? _seekValue
-        : _currentPosition.inMilliseconds.toDouble();
+    final curMs =
+        _isSeeking ? _seekValue : _currentPosition.inMilliseconds.toDouble();
     final rem = _totalDuration - _currentPosition;
 
     return Column(
@@ -882,22 +861,16 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              _fmt(_currentPosition),
-              style: GoogleFonts.inter(
-                color: Colors.white70,
-                fontSize: 11.sp,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            Text(
-              '-${_fmt(rem)}',
-              style: GoogleFonts.inter(
-                color: Colors.white70,
-                fontSize: 11.sp,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            Text(_fmt(_currentPosition),
+                style: GoogleFonts.inter(
+                    color: Colors.white70,
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.w600)),
+            Text('-${_fmt(rem)}',
+                style: GoogleFonts.inter(
+                    color: Colors.white70,
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.w600)),
           ],
         ),
       ],
@@ -910,10 +883,8 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
     return GestureDetector(
       onTap: () => setState(() => _isVolumeExpanded = !_isVolumeExpanded),
       child: _LiquidGlass(
-        padding: EdgeInsets.symmetric(
-          horizontal: 20.w,
-          vertical: _isVolumeExpanded ? 18.h : 14.h,
-        ),
+        padding:
+            EdgeInsets.symmetric(horizontal: 20.w, vertical: _isVolumeExpanded ? 18.h : 14.h),
         child: Column(
           children: [
             Row(
@@ -930,11 +901,8 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
                 AnimatedRotation(
                   turns: _isVolumeExpanded ? 0.5 : 0.0,
                   duration: const Duration(milliseconds: 280),
-                  child: Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    color: Colors.white70,
-                    size: 24.r,
-                  ),
+                  child: Icon(Icons.keyboard_arrow_down_rounded,
+                      color: Colors.white70, size: 24.r),
                 ),
               ],
             ),
@@ -949,21 +917,16 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
                   SizedBox(height: 16.h),
                   Row(
                     children: [
-                      Icon(
-                        Icons.volume_mute_rounded,
-                        color: Colors.white30,
-                        size: 18.r,
-                      ),
+                      Icon(Icons.volume_mute_rounded,
+                          color: Colors.white30, size: 18.r),
                       Expanded(
                         child: SliderTheme(
                           data: SliderThemeData(
                             trackHeight: 3.h,
-                            thumbShape: RoundSliderThumbShape(
-                              enabledThumbRadius: 6.r,
-                            ),
-                            overlayShape: RoundSliderOverlayShape(
-                              overlayRadius: 14.r,
-                            ),
+                            thumbShape:
+                                RoundSliderThumbShape(enabledThumbRadius: 6.r),
+                            overlayShape:
+                                RoundSliderOverlayShape(overlayRadius: 14.r),
                             activeTrackColor: Colors.white,
                             inactiveTrackColor: Colors.white12,
                             thumbColor: Colors.white,
@@ -976,11 +939,8 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
                           ),
                         ),
                       ),
-                      Icon(
-                        Icons.volume_up_rounded,
-                        color: Colors.white70,
-                        size: 18.r,
-                      ),
+                      Icon(Icons.volume_up_rounded,
+                          color: Colors.white70, size: 18.r),
                     ],
                   ),
                   SizedBox(height: 8.h),
@@ -988,13 +948,9 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Shuffle',
-                        style: GoogleFonts.inter(
-                          color: Colors.white60,
-                          fontSize: 13.sp,
-                        ),
-                      ),
+                      Text('Shuffle',
+                          style: GoogleFonts.inter(
+                              color: Colors.white60, fontSize: 13.sp)),
                       GestureDetector(
                         onTap: _toggleShuffle,
                         child: Icon(
@@ -1043,25 +999,37 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
                           height: 46.r,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            // Active: brighter white fill; inactive: subtle glass
                             color: isActive
-                                ? Colors.white.withOpacity(0.30)
+                                ? Colors.white.withOpacity(0.28)
                                 : Colors.white.withOpacity(0.10),
+                            // Specular gradient on circle — same Liquid Glass layering
+                            gradient: RadialGradient(
+                              center: const Alignment(-0.4, -0.5),
+                              radius: 1.0,
+                              colors: [
+                                Colors.white.withOpacity(isActive ? 0.45 : 0.22),
+                                Colors.white.withOpacity(isActive ? 0.18 : 0.06),
+                              ],
+                            ),
                             border: Border.all(
                               color: isActive
                                   ? Colors.white.withOpacity(0.70)
-                                  : Colors.white.withOpacity(0.22),
-                              width: isActive ? 1.5 : 1.0,
+                                  : Colors.white.withOpacity(0.25),
+                              width: isActive ? 1.5 : 0.8,
                             ),
-                            boxShadow: isActive
-                                ? [
-                                    BoxShadow(
-                                      color: Colors.white.withOpacity(0.18),
-                                      blurRadius: 10,
-                                      spreadRadius: 1,
-                                    ),
-                                  ]
-                                : [],
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.20),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                              if (isActive)
+                                BoxShadow(
+                                  color: Colors.white.withOpacity(0.15),
+                                  blurRadius: 8,
+                                  spreadRadius: 1,
+                                ),
+                            ],
                           ),
                           child: ClipOval(
                             child: BackdropFilter(
@@ -1109,9 +1077,7 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
                     color: Colors.white.withOpacity(0.14),
                     border: Border(
                       top: BorderSide(
-                        color: Colors.white.withOpacity(0.2),
-                        width: 1,
-                      ),
+                          color: Colors.white.withOpacity(0.2), width: 1),
                     ),
                   ),
                   child: Column(
@@ -1142,22 +1108,15 @@ class _AudioplayerScreenState extends State<AudioplayerScreen>
                             final isActive = i == audioIndex;
                             return ListTile(
                               leading: isActive
-                                  ? Icon(
-                                      Icons.music_note_rounded,
-                                      color: Colors.white,
-                                      size: 20.r,
-                                    )
-                                  : Icon(
-                                      Icons.music_note_outlined,
-                                      color: Colors.white38,
-                                      size: 20.r,
-                                    ),
+                                  ? Icon(Icons.music_note_rounded,
+                                      color: Colors.white, size: 20.r)
+                                  : Icon(Icons.music_note_outlined,
+                                      color: Colors.white38, size: 20.r),
                               title: Text(
-                                _stripExtension(_audioFiles[i].split('/').last),
+                                _stripExtension(
+                                    _audioFiles[i].split('/').last),
                                 style: GoogleFonts.inter(
-                                  color: isActive
-                                      ? Colors.white
-                                      : Colors.white70,
+                                  color: isActive ? Colors.white : Colors.white70,
                                   fontSize: 14.sp,
                                   fontWeight: isActive
                                       ? FontWeight.w600
